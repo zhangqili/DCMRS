@@ -19,8 +19,6 @@ int main(void)
         LOG_RE("hello world error raw\r\n");
         LOG_RW("hello world warning raw\r\n");
         LOG_RI("hello world information raw\r\n");
-        LOG_RD("hello world debug raw\r\n");
-        LOG_RT("hello world trace raw\r\n");
         bflb_mtimer_delay_ms(1000);
     }
 }
