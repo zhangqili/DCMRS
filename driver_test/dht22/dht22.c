@@ -27,23 +27,12 @@ References:				This library was written based on the DHT22 datasheet
 
 //1. One wire data line
 static uint16_t oneWire_PIN;
-static uint8_t oneWirePin_Idx;
 
 //*** Functions prototypes ***//
 //OneWire Initialise
 void DHT22_Init(uint16_t DataPin)
 {
 	oneWire_PIN = DataPin;
-	for(uint8_t i=0; i<16; i++)
-	{
-		if(DataPin & (1 << i))
-		{
-			oneWirePin_Idx = i;
-			break;
-		}
-	}
-
-	
 }
 //Change pin mode
 void ONE_WIRE_PinMode(OnePinMode_Typedef mode)
@@ -62,7 +51,7 @@ void ONE_WIRE_PinMode(OnePinMode_Typedef mode)
 void ONE_WIRE_Pin_Write(bool state)
 {
 	if(state) bflb_gpio_set(gpio, oneWire_PIN);
-	else bflb_gpio_reset(gpio, oneWire_PIN);+
+	else bflb_gpio_reset(gpio, oneWire_PIN);
 }
 bool ONE_WIRE_Pin_Read(void)
 {
