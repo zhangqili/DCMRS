@@ -4,7 +4,7 @@
 
 #include "main.h"
  
-#define DHT22_PIN			GPIO_PIN_18
+#define DHT22_PIN			GPIO_PIN_23
  
 #define DHT22_OUT_1			bflb_gpio_set(gpio, DHT22_PIN)
 #define DHT22_OUT_0			bflb_gpio_reset(gpio, DHT22_PIN)
