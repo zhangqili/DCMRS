@@ -16,6 +16,7 @@ float humidity;
 uint32_t dat;
 uint16_t co2;
 uint16_t tvoc;
+DHT22_Data_TypeDef dht22_dat;
 int main(void)
 {
     board_init();
@@ -23,7 +24,7 @@ int main(void)
     gpio = bflb_device_get_by_name("gpio");
     adc = bflb_device_get_by_name("adc");
     printf("gpio output\r\n");
-    DHT22_Init(DHT22_PIN);
+    DHT22_ReadData(&dht22_dat);
     TEMT6000_Init(ADC_CHANNEL_10);
     TEMT6000_Read(&dat);
 
@@ -40,8 +41,10 @@ int main(void)
         //sgp30_read();
         //printf("CO2:%d, TVOC:%d\n",sgp30_data.co2,sgp30_data.tvoc);
         sgp30_basic_read(&co2, &tvoc);
-        printf("CO2:%d, TVOC:%d\n", co2, tvoc);
-        //printf("hello, world\n");
+        DHT22_ReadData(&dht22_dat);
+        //printf("CO2:%d, TVOC:%d\n", co2, tvoc);
+        printf("hello, world\n");
+        printf("temp:%fn",dht22_dat.temp_high+dht22_dat.temp_low/100.0);
         //bflb_gpio_set(gpio, GPIO_PIN_0);
         //printf("GPIO_PIN_1=%x\r\n", bflb_gpio_read(gpio, GPIO_PIN_1));
         //bflb_mtimer_delay_ms(2000);

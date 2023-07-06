@@ -4,10 +4,18 @@ include(proj.conf)
 
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
-sdk_library_add_sources(app PRIVATE ./yyy/xxx.c ./xxx1.c);
+target_sources(app PRIVATE 
+./temt6000/temt6000.c)
+target_sources(app PRIVATE
+./sgp30/driver_sgp30.c 
+./sgp30/driver_sgp30_advance.c 
+./sgp30/driver_sgp30_basic.c 
+./sgp30/driver_sgp30_interface.c) 
+#sdk_library_add_sources(app PRIVATE)
 
-sdk_add_include_directories(./);
-sdk_add_include_directories(./yyy/);
+sdk_add_include_directories(./temt6000/)
+sdk_add_include_directories(./sgp30/)
+sdk_add_include_directories(./)
 
 sdk_set_main_file(main.c)
 

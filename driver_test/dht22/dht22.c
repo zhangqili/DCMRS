@@ -1,148 +1,160 @@
-/*
-Library:					DHT22 - AM2302 Temperature and Humidity Sensor
-Written by:				Mohamed Yaqoob (MYaqoobEmbedded YouTube Channel)
-Date Written:			21/11/2018
-Last modified:		-/-
-Description:			This is an STM32 device driver library for the DHT22 Temperature and Humidity Sensor, using STM HAL libraries
+#include "dht22.h"
+#include "main.h"
 
-References:				This library was written based on the DHT22 datasheet
-										- https://cdn-shop.adafruit.com/datasheets/Digital+humidity+and+temperature+sensor+AM2302.pdf
-										
-* Copyright (C) 2018 - M. Yaqoob
-   This is a free software under the GNU license, you can redistribute it and/or modify it under the terms
-   of the GNU General Public Licenseversion 3 as published by the Free Software Foundation.
+ //////////////////////////////////////////////////////////////////////////////////	 
+//本程序只供学习使用，未经作者许可，不得用于其它任何用途
+//ALIENTEK战舰STM32开发板
+//DHT11数字温湿度传感器驱动代码	   
+//正点原子@ALIENTEK
+//技术论坛:www.openedv.com
+//修改日期:2012/9/12
+//版本：V1.0
+//版权所有，盗版必究。
+//Copyright(C) 广州市星翼电子科技有限公司 2009-2019
+//All rights reserved									  
+//////////////////////////////////////////////////////////////////////////////////
+/* USER CODE BEGIN 0 */
+
+
+
+/**
+	******************************************************************************
+	* @file			bsp_dht11.c
+	* @author		
+	* @date			
+	* @version	v1.0
+	* @note			DHT11 driver
+	******************************************************************************
+	*/
+ 
+
+
+ 
+/**
+	* @brief DHT22 输出模式
+	*/
+static void DHT22_Mode_OUT_PP(void)
+{
+	bflb_gpio_init(gpio, DHT22_PIN, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+/* 	GPIO_InitTypeDef GPIO_InitStruct;
 	
-   This software library is shared with puplic for educational purposes, without WARRANTY and Author is not liable for any damages caused directly
-   or indirectly by this software, read more about this on the GNU General Public License.
+	GPIO_InitStruct.Pin = GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct); */
+}
+ 
+/**
+	* @brief DHT22 输入模式
+	*/
+static void DHT22_Mode_IN_NP(void)
+{
+	bflb_gpio_init(gpio, DHT22_PIN, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+
+/* 	GPIO_InitTypeDef GPIO_InitStruct;
+	
+	GPIO_InitStruct.Pin = GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct); */
+}
+ 
+/**
+	* @brief DHT22 读取字节
+	*/
+uint8_t DHT22_ReadByte(void)
+{
+	uint8_t i, temp = 0;
+ 
+	for (i = 0; i < 8; i++)
+	{
+		while (DHT22_IN == 0);		// 等待低电平结束
+		
+		bflb_mtimer_delay_us(40);					//	延时 40 微秒		低电平为 0 ，高电平为 1
+		
+		if (DHT22_IN == 1)
+		{
+			while (DHT22_IN == 1);	// 等待高电平结束
+			
+			temp |= (uint8_t)(0X01 << (7 - i));			// 先发送高位 MSB
+		}
+		else
+		{
+			temp &= (uint8_t)~(0X01 << (7 - i));
+		}
+	}
+	return temp;
+}
+ 
+/**
+	* @brief DHT22 读取一次数据
+	*/
+uint8_t DHT22_ReadData(DHT22_Data_TypeDef *DHT22_Data)
+{
+	DHT22_Mode_OUT_PP();		// 主机输出，主机拉低
+	DHT22_OUT_0;	
+	bflb_mtimer_delay_ms(18);					// 延时 18 ms
+	
+	DHT22_OUT_1;						// 主机拉高，延时 30 us
+	bflb_mtimer_delay_us(30);	
+ 
+	DHT22_Mode_IN_NP();			// 主机输入，获取 DHT11 数据
+	
+	if (DHT22_IN == 0)			// 收到从机应答
+	{
+		while (DHT22_IN == 0);		// 等待从机应答的低电平结束
+		
+		while (DHT22_IN == 1);		// 等待从机应答的高电平结束
+		
+		/*开始接收数据*/   
+		DHT22_Data->humi_high  = DHT22_ReadByte();
+		DHT22_Data->humi_low = DHT22_ReadByte();
+		DHT22_Data->temp_high  = DHT22_ReadByte();
+		DHT22_Data->temp_low = DHT22_ReadByte();
+		DHT22_Data->check_sum = DHT22_ReadByte();
+		
+		DHT22_Mode_OUT_PP();		// 读取结束，主机拉高
+		DHT22_OUT_1;	
+		
+		// 数据校验
+		if (DHT22_Data->check_sum == DHT22_Data->humi_high + DHT22_Data->humi_low + DHT22_Data->temp_high + DHT22_Data->temp_low)	
+		{
+			return 1;
+		}		
+		else
+		{
+			return 0;
+		}
+	}
+	else		// 未收到从机应答
+	{
+		return 0;
+	}
+}
+ 
+// 测试程序
+/*
+while (1)
+{
+	if (DHT11_ReadData(&DHT11_Data))
+	{
+		DEBUG_INFO("\r\n读取DHT11成功!\r\n\r\n湿度为%d.%d ％RH ，温度为 %d.%d℃ \r\n",					\
+		DHT11_Data.humi_int,DHT11_Data.humi_deci,DHT11_Data.temp_int,DHT11_Data.temp_deci);
+	}
+	else
+	{
+		DEBUG_INFO("Read DHT11 ERROR!\r\n");
+	}
+	HAL_Delay(3000);
+}
 */
 
-//Header files
-#include "dht22.h"
 
-//Bit fields manipulations
-#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
-#define bitSet(value, bit) ((value) |= (1UL << (bit)))
-#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
-#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
 
-//1. One wire data line
-static uint16_t oneWire_PIN;
 
-//*** Functions prototypes ***//
-//OneWire Initialise
-void DHT22_Init(uint16_t DataPin)
-{
-	oneWire_PIN = DataPin;
-}
-//Change pin mode
-void ONE_WIRE_PinMode(OnePinMode_Typedef mode)
-{
-	if(mode == ONE_OUTPUT)
-	{
-		bflb_gpio_deinit(gpio, oneWire_PIN);
-		bflb_gpio_init(gpio, oneWire_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
-	}
-	else if(mode == ONE_INPUT)
-	{
-		bflb_gpio_init(gpio, oneWire_PIN, GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_0);
-	}
-}	
-//One Wire pin HIGH/LOW Write
-void ONE_WIRE_Pin_Write(bool state)
-{
-	if(state) bflb_gpio_set(gpio, oneWire_PIN);
-	else bflb_gpio_reset(gpio, oneWire_PIN);
-}
-bool ONE_WIRE_Pin_Read(void)
-{
-	return (1&bflb_gpio_read(gpio, oneWire_PIN));
-}
 
-//Microsecond delay
-void DelayMicroSeconds(uint32_t uSec)
-{
-	bflb_mtimer_delay_us(uSec);
-}
 
-//DHT Begin function
-void DHT22_StartAcquisition(void)
-{
-	//Change data pin mode to OUTPUT
-	ONE_WIRE_PinMode(ONE_OUTPUT);
-	//Put pin LOW
-	ONE_WIRE_Pin_Write(0);
-	//500uSec delay
-	DelayMicroSeconds(500);
-	//Bring pin HIGH
-	ONE_WIRE_Pin_Write(1);
-	//30 uSec delay
-	DelayMicroSeconds(30);
-	//Set pin as input
-	ONE_WIRE_PinMode(ONE_INPUT);
-}
-//Read 5 bytes
-void DHT22_ReadRaw(uint8_t *data)
-{
-	uint32_t rawBits = 0UL;
-	uint8_t checksumBits=0;
-	
-	DelayMicroSeconds(40);
-	while(!ONE_WIRE_Pin_Read());
-	while(ONE_WIRE_Pin_Read());
-	for(int8_t i=31; i>=0; i--)
-	{
-		while(!ONE_WIRE_Pin_Read());
-		DelayMicroSeconds(40);
-		if(ONE_WIRE_Pin_Read())
-		{
-			rawBits |= (1UL << i);
-		}
-		while(ONE_WIRE_Pin_Read());
-	}
-	
-	for(int8_t i=7; i>=0; i--)
-	{
-		while(!ONE_WIRE_Pin_Read());
-		DelayMicroSeconds(40);
-		if(ONE_WIRE_Pin_Read())
-		{
-			checksumBits |= (1UL << i);
-		}
-		while(ONE_WIRE_Pin_Read());
-	}
-	
-	
-	//Copy raw data to array of bytes
-	data[0] = (rawBits>>24)&0xFF;
-	data[1] = (rawBits>>16)&0xFF;
-	data[2] = (rawBits>>8)&0xFF;
-	data[3] = (rawBits>>0)&0xFF;
-	data[4] = (checksumBits)&0xFF;
-}
 
-//Get Temperature and Humidity data
-bool DHT22_GetTemp_Humidity(float *Temp, float *Humidity)
-{
-	uint8_t dataArray[6], myChecksum;
-	uint16_t Temp16, Humid16;
-	//Implement Start data Aqcuisition routine
-	DHT22_StartAcquisition();
-	//Aqcuire raw data
-	DHT22_ReadRaw(dataArray);
-	//calculate checksum
-	myChecksum = 0;
-	for(uint8_t k=0; k<4; k++) 
-	{
-		myChecksum += dataArray[k];
-	}
-	if(myChecksum == dataArray[4])
-	{
-		Temp16 = (dataArray[2] <<8) | dataArray[3];
-		Humid16 = (dataArray[0] <<8) | dataArray[1];
-		
-		*Temp = Temp16/10.0f;
-		*Humidity = Humid16/10.0f;
-		return 1;
-	}
-	return 0;
-}
