@@ -14,12 +14,12 @@
 
 #define CROP_WQVGA_X        (240)
 #define CROP_WQVGA_Y        (320)
-#define CAM_BUFF_NUM        (4)
+#define CAM_BUFF_NUM        (8)
 
 int main(void)
 {
     // cam
-    uint8_t *pic;
+    uint8_t *pic=NULL;
     static uint8_t picture[CROP_WQVGA_X * CROP_WQVGA_Y * CAM_BUFF_NUM] ATTR_NOINIT_PSRAM_SECTION __attribute__((aligned(64)));
 
     board_init(); // 初始化开发板
@@ -27,12 +27,13 @@ int main(void)
     lcd_clear(0x0000); // 清空LCD屏幕
 
     // Cam test
+    static struct bflb_device_s *uart0;
     static struct bflb_device_s *i2c0;
     static struct bflb_device_s *cam0;
-
+    uart0 = bflb_device_get_by_name("uart0");
     // static struct bflb_device_s *uart0;
     // uart0 = bflb_device_get_by_name("uart0");
-
+    wifi_connect();
     uint32_t i, j, pic_size;
     struct bflb_cam_config_s cam_config;
     struct image_sensor_config_s *sensor_config;
@@ -83,6 +84,8 @@ int main(void)
             // {
             //     bflb_uart_putchar(uart0, pic[c]);
             // }
+            /* Send picture to PC */
+            // wifi_send_mjpeg(pic, pic_size); // 将图像通过MJPEG压缩并通过WiFi发送到PC端
 
             lcd_draw_picture_nonblocking(0,0,CROP_WQVGA_X,CROP_WQVGA_Y, pic); // 显示图像到LCD屏幕上
         }
