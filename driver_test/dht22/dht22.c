@@ -35,7 +35,7 @@
 	*/
 static void DHT22_Mode_OUT_PP(void)
 {
-	bflb_gpio_init(gpio, DHT22_PIN, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+	bflb_gpio_init(gpio, DHT22_PIN, GPIO_OUTPUT | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_0);
 /* 	GPIO_InitTypeDef GPIO_InitStruct;
 	
 	GPIO_InitStruct.Pin = GPIO_PIN_11;
@@ -51,7 +51,7 @@ static void DHT22_Mode_OUT_PP(void)
 	*/
 static void DHT22_Mode_IN_NP(void)
 {
-	bflb_gpio_init(gpio, DHT22_PIN, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+	bflb_gpio_init(gpio, DHT22_PIN, GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_0);
 
 /* 	GPIO_InitTypeDef GPIO_InitStruct;
 	

@@ -24,7 +24,6 @@ int main(void)
     gpio = bflb_device_get_by_name("gpio");
     adc = bflb_device_get_by_name("adc");
     printf("gpio output\r\n");
-    DHT22_ReadData(&dht22_dat);
     TEMT6000_Init(ADC_CHANNEL_10);
     TEMT6000_Read(&dat);
 
@@ -41,10 +40,12 @@ int main(void)
         //sgp30_read();
         //printf("CO2:%d, TVOC:%d\n",sgp30_data.co2,sgp30_data.tvoc);
         sgp30_basic_read(&co2, &tvoc);
+        //bflb_mtimer_delay_ms(2000);
         DHT22_ReadData(&dht22_dat);
         //printf("CO2:%d, TVOC:%d\n", co2, tvoc);
         printf("hello, world\n");
-        printf("temp:%fn",dht22_dat.temp_high+dht22_dat.temp_low/100.0);
+        printf("temp:%f\n",(dht22_dat.temp_high*256+dht22_dat.temp_low+13)/10.0);
+        printf("humi:%f\n",(dht22_dat.temp_high*256+dht22_dat.humi_low+2)/10.0);
         //bflb_gpio_set(gpio, GPIO_PIN_0);
         //printf("GPIO_PIN_1=%x\r\n", bflb_gpio_read(gpio, GPIO_PIN_1));
         //bflb_mtimer_delay_ms(2000);
