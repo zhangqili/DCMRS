@@ -194,23 +194,26 @@
 #include "bflb_dma.h"
 #include "bflb_mjpeg.h"
 #include "jpeg_head.h"
-
+#include "decompressed.h"
 #define BLOCK_NUM           2 //定义了图像处理中的块数量。每个块可以看作是图像的一部分，用于分块处理图像数据。
-#define ROW_NUM             (160 * BLOCK_NUM)  //定义了每个块中的行数。每个块中的行数决定了处理的图像数据的高度。这个值通过乘以 BLOCK_NUM 计算得到。
+#define ROW_NUM             (110 * BLOCK_NUM)  //定义了每个块中的行数。每个块中的行数决定了处理的图像数据的高度。这个值通过乘以 BLOCK_NUM 计算得到。
 #define CAM_FRAME_COUNT_USE 5 //定义了需要处理的图像帧数量
 #define CROP_WQVGA_X        (240)
 static struct bflb_device_s *i2c0;
 static struct bflb_device_s *cam0;
 
 static struct bflb_device_s *mjpeg;
-
+//volatile告诉编译器这个变量可能会改变
 volatile uint32_t pic_count = 0;
 volatile uint32_t pic_addr[CAM_FRAME_COUNT_USE] = { 0 };
 volatile uint32_t pic_len[CAM_FRAME_COUNT_USE] = { 0 };
+static uint8_t picture[CROP_WQVGA_X * 160 * 2] ATTR_NOINIT_PSRAM_SECTION __attribute__((aligned(64)));
 
+uint8_t *pic;
 void mjpeg_isr(int irq, void *arg)
 {
-    uint8_t *pic;
+
+    //uint8_t *pic;
     uint32_t jpeg_len;
 
     uint32_t intstatus = bflb_mjpeg_get_intstatus(mjpeg);//表示中断状态
@@ -220,8 +223,10 @@ void mjpeg_isr(int irq, void *arg)
         pic_addr[pic_count] = (uint32_t)pic;
         pic_len[pic_count] = jpeg_len;
         pic_count++;
-        bflb_mjpeg_pop_one_frame(mjpeg);
-        lcd_draw_picture_nonblocking(0,0,CROP_WQVGA_X,ROW_NUM, pic); // 显示图像到LCD屏幕上
+        //bflb_mjpeg_pop_one_frame(mjpeg);
+        //yuyv_to_rgb(pic,picture,CROP_WQVGA_X,ROW_NUM);
+       // printf("第%d帧压缩图像的大小: %d\r\n",pic_count,jpeg_len);
+        //lcd_draw_picture_nonblocking(0,0,CROP_WQVGA_X,ROW_NUM, pic); // 显示图像到LCD屏幕上
         if (pic_count == CAM_FRAME_COUNT_USE) {
            // bflb_cam_stop(cam0);
             //bflb_mjpeg_stop(mjpeg);
@@ -299,7 +304,7 @@ int main(void)
     /* Crop resolution_x, should be set before init */
     bflb_cam_crop_hsync(cam0, 112, 112 + CROP_WQVGA_X); // 设置水平方向的裁剪范围
     /* Crop resolution_y, should be set before init */
-    bflb_cam_crop_vsync(cam0, 120, 120 + ROW_NUM); // 设置垂直方向的裁剪范围
+    bflb_cam_crop_vsync(cam0, 120, 120 + 160); // 设置垂直方向的裁剪范围
     memcpy(&cam_config, sensor_config, IMAGE_SENSOR_INFO_COPY_SIZE);
     cam_config.with_mjpeg = true;
     cam_config.input_source = CAM_INPUT_SOURCE_DVP;
@@ -339,18 +344,35 @@ int main(void)
 
     bflb_mjpeg_start(mjpeg);
 
-    while (pic_count < CAM_FRAME_COUNT_USE) {
-        printf("pic count:%d\r\n", pic_count);
-        bflb_mtimer_delay_ms(200);
-    }
+    // while (pic_count < CAM_FRAME_COUNT_USE) {
+    //     printf("pic count:%d\r\n", pic_count);
+    //     bflb_mtimer_delay_ms(200);
+    // }
+    uint8_t *pic_now =(uint8_t *)picture;
+    while (1)
+    {
+        if(bflb_mjpeg_get_frame_count(mjpeg)>0)
+        {
+            bflb_mjpeg_pop_one_frame(mjpeg);
+            printf("正在显示");
+            // for(int i=0;i<CROP_WQVGA_X * ROW_NUM * 2;i++)
+            // printf("%d :%d\r\n",i,pic_now[i]);
+            yuyv_to_rgb(pic,picture,CROP_WQVGA_X,ROW_NUM);
+            //bflb_mtimer_delay_ms(200);
+            lcd_draw_picture_nonblocking(0,0,CROP_WQVGA_X,160, pic_now);
+        }
 
-    for (uint8_t i = 0; i < CAM_FRAME_COUNT_USE; i++) {
-        printf("jpg addr:%08x ,jpg size:%d\r\n", pic_addr[i], pic_len[i]);
-        //bflb_mjpeg_dump_hex((uint8_t *)pic_addr[i], pic_len[i]);
+        /* code */
     }
+    
 
-    while (1) {
+    // while (1) {
+    //     for (uint8_t i = 0; i < CAM_FRAME_COUNT_USE; i++) {
+    //         printf("pic count:%d jpg addr:%08x ,jpg size:%d\r\n", pic_count,pic_addr[i], pic_len[i]);
+    //         //bflb_mjpeg_dump_hex((uint8_t *)pic_addr[i], pic_len[i]);
+    //         bflb_mtimer_delay_ms(10);
+    //     }
 
-        bflb_mtimer_delay_ms(1000);
-    }
+    //     //bflb_mtimer_delay_ms(1000);
+    // }
 }
