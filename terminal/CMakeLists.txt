@@ -11,6 +11,7 @@ target_sources(app PRIVATE
 ./sgp30/driver_sgp30_advance.c 
 ./sgp30/driver_sgp30_basic.c 
 ./sgp30/driver_sgp30_interface.c) 
+#target_sources(app PRIVATE ./wifi_tcp_server.c)
 #sdk_library_add_sources(app PRIVATE)
 
 sdk_add_include_directories(./temt6000/)

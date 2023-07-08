@@ -7,8 +7,12 @@
 #include "bflb_mtimer.h"
 #include "bflb_adc.h"
 #include "bflb_i2c.h"
+#include "bflb_irq.h"
+#include "bflb_uart.h"
 #include "board.h"
 #include "log.h"
+
+#define USE_WIFI 0
 
 #define DHT22_PIN GPIO_PIN_18
 
