@@ -21,9 +21,3 @@
 #include "FreeRTOS.h"
 #include "FreeRTOSConfig.h"
 
-
-void vApplicationTickHook()
-{
-	// 告诉lvgl已经过去了1毫秒
-	lv_tick_inc(1);
-}

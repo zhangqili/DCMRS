@@ -20,4 +20,7 @@ extern struct bflb_device_s *gpio;
 extern struct bflb_device_s *adc;
 extern struct bflb_device_s *i2c0;
 
+extern uint8_t tcp_rec_buf[64];
+extern char *recv_data;
+
 #endif MAIN_H_

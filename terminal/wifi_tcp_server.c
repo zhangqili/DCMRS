@@ -1,4 +1,4 @@
-
+#include "main.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -13,7 +13,6 @@
 
 #include "shell.h"
 #include "utils_getopt.h"
-#include "bflb_mtimer.h"
 
 // clang-format off
 // clang-format on
@@ -46,7 +45,7 @@ static void test_close(int sig)
     }
 }
 
-static void wifi_test_tcp_server_init(int argc, char **argv)
+void wifi_tcp_server_init(int argc, char **argv)
 {
     abort_exec = shell_signal(SHELL_SIGINT, test_close);
     printf("tcp server task start ...\r\n");
@@ -61,7 +60,7 @@ static void wifi_test_tcp_server_init(int argc, char **argv)
     }
 
     /* get listen port (argv[1] if present) */
-    port = argv[1];
+    port = "3365";
 
     recv_data = (char *)pvPortMalloc(RECV_DATA_LEN);
     if (recv_data == NULL) {
@@ -105,6 +104,7 @@ static void wifi_test_tcp_server_init(int argc, char **argv)
         recv_data_cnt = 0;
         while (1) {
             recv_data_cnt = recv(connected, recv_data, RECV_DATA_LEN, 0);
+            memcpy(tcp_rec_buf,recv_data,32);
             if (recv_data_cnt <= 0) {
                 break;
             }
@@ -135,7 +135,7 @@ static void wifi_test_tcp_server_init(int argc, char **argv)
 
 int cmd_wifi_tcp_server(int argc, char **argv)
 {
-    wifi_test_tcp_server_init(argc, argv);
+    wifi_tcp_server_init(argc, argv);
 
     return 0;
 }

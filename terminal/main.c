@@ -29,14 +29,30 @@
 #include "FreeRTOSConfig.h"
 #include "rtos_def.h"
 
+#include "tcp_server_config.h"
+
 struct bflb_device_s *gpio;
 struct bflb_device_s *adc;
 struct bflb_device_s *i2c0;
 
-static rtos_mutex lvgl_mutex;
+uint8_t tcp_rec_buf[64];
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
 
 #define WIFI_STACK_SIZE  (1536)
 #define TASK_PRIORITY_FW (16)
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+static struct bflb_device_s *uart0;
+
 static TaskHandle_t wifi_fw_task;
 
 static wifi_conf_t conf = {
@@ -45,25 +61,14 @@ static wifi_conf_t conf = {
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 
-#define LVGL_TASK_HANDLER_PRIORITY 		(tskIDLE_PRIORITY + 3)	// lvgl task handel
-#define LVGL_TASK_HANDLER_STACK_SIZE 	(512)
+/****************************************************************************
+ * Private Function Prototypes
+ ****************************************************************************/
 
-static portTASK_FUNCTION( lv_100ask_task_handler, pvParameters )
-{
-	TickType_t xLastWakeTime;
-	const TickType_t xPeriod = pdMS_TO_TICKS( 5 );
-	
-	// 使用当前时间初始化变量xLastWakeTime ,注意这和vTaskDelay()函数不同 
-	xLastWakeTime = xTaskGetTickCount();  
-	
-	for(;;)
-	{		
-		/* 调用系统延时函数,周期性阻塞5ms */    
-		vTaskDelayUntil( &xLastWakeTime,xPeriod );
-		lv_task_handler();
-	}
-	vTaskDelete(NULL);
-}
+/****************************************************************************
+ * Functions
+ ****************************************************************************/
+
 int wifi_start_firmware_task(void)
 {
     LOG_I("Starting wifi ...\r\n");
@@ -90,7 +95,7 @@ int wifi_start_firmware_task(void)
     bflb_irq_attach(WIFI_IRQn, (irq_callback)interrupt0_handler, NULL);
     bflb_irq_enable(WIFI_IRQn);
 
-    //xTaskCreate(wifi_main, (char *)"fw", WIFI_STACK_SIZE, NULL, TASK_PRIORITY_FW, &wifi_fw_task);
+    xTaskCreate(wifi_main, (char *)"fw", WIFI_STACK_SIZE, NULL, TASK_PRIORITY_FW, &wifi_fw_task);
 
     return 0;
 }
@@ -138,55 +143,6 @@ void wifi_event_handler(uint32_t code)
         }
     }
 }
-
-#if LV_BUILD_EXAMPLES && LV_USE_SLIDER
-
-static lv_obj_t * label;
-
-static void slider_event_cb(lv_event_t * e)
-{
-    lv_obj_t * slider = lv_event_get_target(e);
-
-    /*Refresh the text*/
-    lv_label_set_text_fmt(label, "%"LV_PRId32, lv_slider_get_value(slider));
-    lv_obj_align_to(label, slider, LV_ALIGN_OUT_TOP_MID, 0, -15);    /*Align top of the slider*/
-}
-
-/**
- * Create a slider and write its value on a label.
- */
-void lv_example_get_started_114514(void)
-{
-    /*Create a slider in the center of the display*/
-    lv_obj_t * slider = lv_slider_create(lv_scr_act());
-    lv_obj_set_width(slider, 200);                          /*Set the width*/
-    lv_obj_center(slider);                                  /*Align to the center of the parent (screen)*/
-    lv_obj_add_event_cb(slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);     /*Assign an event function*/
-
-    /*Create a label above the slider*/
-    label = lv_label_create(lv_scr_act());
-    lv_label_set_text(label, "0");
-    lv_obj_align_to(label, slider, LV_ALIGN_OUT_TOP_MID, 0, -15);    /*Align top of the slider*/
-}
-
-void lv_example_label_1(void)
-{
-    lv_obj_t * label1 = lv_label_create(lv_scr_act());
-    lv_label_set_long_mode(label1, LV_LABEL_LONG_WRAP);     /*Break the long lines*/
-    lv_label_set_recolor(label1, true);                      /*Enable re-coloring by commands in the text*/
-    lv_label_set_text(label1, "#0000ff Re-color# #ff00ff words# #ff0000 of a# label, align the lines to the center "
-                      "and wrap long text automatically.");
-    lv_obj_set_width(label1, 150);  /*Set smaller width to make the lines wrap*/
-    lv_obj_set_style_text_align(label1, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_align(label1, LV_ALIGN_CENTER, 0, -40);
-
-    lv_obj_t * label2 = lv_label_create(lv_scr_act());
-    lv_label_set_long_mode(label2, LV_LABEL_LONG_SCROLL_CIRCULAR);     /*Circular scroll*/
-    lv_obj_set_width(label2, 150);
-    lv_label_set_text(label2, "It is a circularly scrolling text. ");
-    lv_obj_align(label2, LV_ALIGN_CENTER, 0, 40);
-}
-#endif
 
 #if LV_USE_METER && LV_BUILD_EXAMPLES
 
@@ -399,17 +355,6 @@ static void draw_event_cb(lv_event_t * e)
     }
 }
 
-static void add_data(lv_timer_t * timer)
-{
-    LV_UNUSED(timer);
-    static uint32_t cnt = 0;
-    //lv_chart_set_next_value(chart1, ser1, lv_rand(20, 90));
-
-    //if(cnt % 4 == 0) lv_chart_set_next_value(chart1, ser2, lv_rand(40, 60));
-
-    //cnt++;
-}
-
 /**
  * Add a faded area effect to the line chart and make some division lines ticker
  */
@@ -436,12 +381,25 @@ void lv_example_chart_2(void)
         //lv_chart_set_next_value(chart1, ser1, lv_rand(20, 90));
         //lv_chart_set_next_value(chart1, ser2, lv_rand(30, 70));
     }
-
-    lv_timer_create(add_data, 200, NULL);
 }
 
 #endif
+#if LV_USE_LABEL && LV_BUILD_EXAMPLES
+lv_obj_t * label1;
+/**
+ * Show line wrap, re-color, line align and text scrolling.
+ */
+void lv_example_label_1(void)
+{
+    label1 = lv_label_create(lv_scr_act());
+    lv_label_set_long_mode(label1, LV_LABEL_LONG_WRAP);     /*Break the long lines*/
+    lv_label_set_text(label1, "Receive data show here");
+    lv_obj_set_width(label1, 150);  /*Set smaller width to make the lines wrap*/
+    lv_obj_set_style_text_align(label1, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(label1, LV_ALIGN_CENTER, 0, -40);
+}
 
+#endif
 struct bflb_adc_result_s adc_result;
 uint32_t dat;
 uint16_t co2;
@@ -453,6 +411,7 @@ static void set_data(lv_timer_t * timer)
     lv_meter_set_indicator_value(temt6000meter, temt6000indic, adc_result.millivolt/4);
     lv_meter_set_indicator_value(sgp30meter, sgp30indic, (co2-400)/120);
     lv_chart_set_next_value(chart1, ser1, adc_result.millivolt/4);
+    lv_label_set_text(label1,recv_data);
 }
 
 /* lvgl log cb */
@@ -477,6 +436,7 @@ static void lvgl_task(void *pvParameters)
     temt6000meter_init();
     sgp30meter_init();
     lv_example_chart_2();
+    lv_example_label_1();
     //lv_demo_benchmark();
     // lv_demo_stress();
     lv_timer_create(set_data, 200, NULL);
@@ -489,6 +449,7 @@ static void lvgl_task(void *pvParameters)
         //printf("lvgl running\n");
         //rtos_mutex_lock(lvgl_mutex);
         lv_task_handler();
+        vTaskDelay(10/portTICK_RATE_MS);
         //rtos_mutex_unlock(lvgl_mutex);
         //printf("lvgl done\n");
         //vTaskDelay(10/portTICK_RATE_MS);
@@ -515,8 +476,20 @@ static void data_task(void *pvParameters)
 static TaskHandle_t wifi_handle;
 static void wifi_task(void *pvParameters)
 {
-    wifi_mgmr_init(&conf);
+    //wifi_mgmr_init(&conf);
+    vTaskDelay(1000/portTICK_RATE_MS);
     wifi_sta_connect("test","19260817",NULL,NULL,1,0,0,1);
+    //vTaskSuspend(lvgl_handle);
+    //vTaskSuspend(data_handle);
+    while(!wifi_mgmr_sta_state_get())
+    {
+        printf("wifi connecting...\n");
+        vTaskDelay(1000/portTICK_RATE_MS);
+    }
+    
+    //vTaskResume(lvgl_handle);
+    //vTaskResume(data_handle);
+    wifi_tcp_server_init(1000,NULL);
     while (1)
     {
         printf("wifi running\n");
@@ -548,20 +521,21 @@ int main(void)
     //lv_task_handler();
     //xTaskCreate( lv_100ask_task_handler, "lvgl_task_handler", LVGL_TASK_HANDLER_STACK_SIZE, NULL, LVGL_TASK_HANDLER_PRIORITY, (TaskHandle_t *) NULL );	
     
-    tcpip_init(NULL, NULL);
     //wifi_start_firmware_task();
     //wifi_mgmr_connection_info();
+    wifi_start_firmware_task();
+    wifi_mgmr_init(&conf);
+    tcpip_init(NULL, NULL);
 
     xTaskCreate(lvgl_task, (char *)"lvgl_task", 1024, NULL, configMAX_PRIORITIES - 4, &lvgl_handle);	
     xTaskCreate(data_task, (char *)"data_task", 512, NULL, configMAX_PRIORITIES - 3, &data_handle);	
-    xTaskCreate(wifi_task, (char *)"wifi_task", 512, NULL, configMAX_PRIORITIES - 2, &wifi_handle);							
+    xTaskCreate(wifi_task, (char *)"wifi_task", 1024, NULL, configMAX_PRIORITIES - 2, &wifi_handle);							
     vTaskStartScheduler();
     printf("lvgl success\r\n");
 
     while (1) {
         printf("alive\r\n");
         //lv_task_handler();
-        printf("CO2:%d, TVOC:%d\n", co2, tvoc);
         //printf("temt%ld\r\n",dat);
         //set_value(indic,dat%100);
         //bflb_mtimer_delay_ms(1);
