@@ -11,6 +11,7 @@
 #include "bflb_uart.h"
 #include "board.h"
 #include "log.h"
+#include "lefl.h"
 
 #define USE_WIFI 0
 
@@ -19,6 +20,16 @@
 extern struct bflb_device_s *gpio;
 extern struct bflb_device_s *adc;
 extern struct bflb_device_s *i2c0;
+
+extern float temperature;
+extern float humidity;
+extern float co2content;
+extern float lightlux;
+
+extern lefl_loop_array_t temp_history;
+extern lefl_loop_array_t humi_history;
+extern lefl_loop_array_t co2_history;
+extern lefl_loop_array_t light_history;
 
 extern uint8_t tcp_rec_buf[64];
 extern char *recv_data;
