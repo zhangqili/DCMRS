@@ -2,6 +2,7 @@
 #include "temt6000.h"
 #include "driver_sgp30_advance.h"
 #include "driver_sgp30_basic.h"
+#include "dht22.h"
 
 #include "lv_conf.h"
 #include "lvgl.h"
@@ -29,8 +30,8 @@
 #include "FreeRTOSConfig.h"
 #include "rtos_def.h"
 
-#include "tcp_server_config.h"
-
+#include "netdb.h"
+//#include "tcp_server_config.h"
 #include "mqtt_user.h"
 struct bflb_device_s *gpio;
 struct bflb_device_s *adc;
@@ -48,7 +49,6 @@ uint8_t tcp_rec_buf[64];
  * Private Types
  ****************************************************************************/
 
-uint32_t wifi_state;
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -60,6 +60,12 @@ static TaskHandle_t wifi_fw_task;
 static wifi_conf_t conf = {
     .country_code = "CN",
 };
+struct bflb_adc_result_s adc_result;
+uint16_t co2;
+uint16_t tvoc;
+DHT22_Data_TypeDef dht22_dat;
+
+volatile uint32_t wifi_state = 0;
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 
@@ -124,9 +130,11 @@ void wifi_event_handler(uint32_t code)
         case CODE_WIFI_ON_GOT_IP: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
             LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size());
+            wifi_state = 1;
         } break;
         case CODE_WIFI_ON_DISCONNECT: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
+            wifi_state = 0;
         } break;
         case CODE_WIFI_ON_AP_STARTED: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STARTED\r\n", __func__);
@@ -146,6 +154,7 @@ void wifi_event_handler(uint32_t code)
     }
 }
 
+#ifdef USE_LVGL
 #if LV_USE_METER && LV_BUILD_EXAMPLES
 
 static lv_obj_t * temt6000meter;
@@ -402,10 +411,6 @@ void lv_example_label_1(void)
 }
 
 #endif
-struct bflb_adc_result_s adc_result;
-uint32_t dat;
-uint16_t co2;
-uint16_t tvoc;
 static TaskHandle_t lvgl_handle;
 static void set_data(lv_timer_t * timer)
 {
@@ -462,6 +467,7 @@ static void lvgl_task(void *pvParameters)
     }
     vTaskDelete(NULL);
 }
+#endif
 
 static TaskHandle_t data_handle;
 static void data_task(void *pvParameters)
@@ -493,8 +499,14 @@ static void wifi_task(void *pvParameters)
     //vTaskResume(data_handle);
     //wifi_tcp_server_init(1000,NULL);
     vTaskDelay(5000/portTICK_RATE_MS);
-    printf("onenet start\n");
     example_mqtt(0,NULL);
+    /*
+    struct addrinfo hints = {0};
+    struct addrinfo *servinfo;
+    int rv;
+    rv=getaddrinfo(ADDRESS, PORT, &hints, &servinfo);
+    */
+    //printf("=======================\ncode:%d",open_nb_socket(ADDRESS, PORT));
     while (1)
     {
         printf("wifi running\n");
@@ -531,9 +543,10 @@ int main(void)
     wifi_start_firmware_task();
     wifi_mgmr_init(&conf);
     tcpip_init(NULL, NULL);
-
+#ifdef USE_LVGL
     xTaskCreate(lvgl_task, (char *)"lvgl_task", 1024, NULL, configMAX_PRIORITIES - 4, &lvgl_handle);	
-    //xTaskCreate(data_task, (char *)"data_task", 512, NULL, configMAX_PRIORITIES - 3, &data_handle);	
+#endif
+    xTaskCreate(data_task, (char *)"data_task", 512, NULL, configMAX_PRIORITIES - 3, &data_handle);	
     xTaskCreate(wifi_task, (char *)"wifi_task", 2048, NULL, configMAX_PRIORITIES - 2, &wifi_handle);							
     vTaskStartScheduler();
 
