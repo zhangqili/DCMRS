@@ -245,7 +245,7 @@ int example_mqtt(int argc, const char *argv[])
         /* publisher*/
         topic = PUBTOPIC;
         memset(message, 0, sizeof(message));
-        sprintf(message,"{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"EnvironmentTemperature\":{\"value\":%.1f},\"CO2Content\":{\"value\":%d},\"LightLux\":{\"value\":%.1f},\"EnvironmentHumidity\":{\"value\":%.1f},\"TargetDevice\":{\"value\":\"TERMINAL\"}},\"method\":\"thing.event.property.post\",\"TargetDevice\":\"TERMINAL\"}",
+        sprintf(message,"{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"EnvironmentTemperature\":{\"value\":%.1f},\"CO2Content\":{\"value\":%d},\"LightLux\":{\"value\":%.1f},\"EnvironmentHumidity\":{\"value\":%.1f},\"TargetDevice\":{\"value\":\"TERMINAL\"}},\"method\":\"thing.event.property.post\"}",
         (dht22_dat.temp_high*256+dht22_dat.temp_low+13)/10.0,//Temperature
         co2,//CO2
         3.333*(float)(adc_result.millivolt),//LIGHT
