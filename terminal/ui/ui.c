@@ -24,6 +24,7 @@ lv_obj_t * ui_Label9;
 lv_obj_t * ui_Label10;
 lv_obj_t * ui_Label11;
 lv_obj_t * ui_Label12;
+lv_obj_t * ui_Connect_Label;
 
 // SCREEN: ui_Screen2
 void ui_Screen2_screen_init(void);

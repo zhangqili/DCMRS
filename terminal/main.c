@@ -163,9 +163,18 @@ lefl_loop_array_t humi_history={.len=30,.index=0};
 lefl_loop_array_t co2_history={.len=30,.index=0};
 lefl_loop_array_t light_history={.len=30,.index=0};
 static TaskHandle_t lvgl_handle;
+uint8_t connect_status;
 static void set_data(lv_timer_t * timer)
 {
     LV_UNUSED(timer);
+    if(connect_status)
+    {
+        lv_label_set_text(ui_Connect_Label, "已连接");
+    }
+    else
+    {
+        
+    }
     lv_meter_set_indicator_value(tempmeter, tempindic, temperature+40);
     lv_meter_set_indicator_value(humimeter, humiindic, humidity);
     lv_meter_set_indicator_value(sgp30meter, sgp30indic, co2content/5);

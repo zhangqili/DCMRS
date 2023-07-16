@@ -9,3 +9,5 @@
 //#define TOPIC       "/h9xwKgTYzwD/TERMINAL/user/get"  //订阅topic  XXXXXX是产品ID   ??????是设备名称
 int open_nb_socket(const char* addr, const char* port);
 int example_mqtt(int argc, const char *argv[]);
+
+extern uint8_t connect_status;

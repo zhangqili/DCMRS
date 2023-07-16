@@ -37,6 +37,7 @@ static void meter_event_cb(lv_event_t * e)
             strcat(tempstr,tempsubstr);
         //lv_chart_set_next_value(chart1, ser2, lv_rand(30, 70));
         }
+        lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_X, -40, 55);
         lv_label_set_text(historylabel,tempstr);
     }
     if(target==humimeter)
@@ -47,6 +48,7 @@ static void meter_event_cb(lv_event_t * e)
             lv_chart_set_next_value(ui_Chart2, mainser, lefl_loop_array_get(&humi_history,i));
             sprintf(tempsubstr,"%.1f\n",lefl_loop_array_get(&humi_history,i));
             strcat(tempstr,tempsubstr);
+            lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_X, 0, 100);
         //lv_chart_set_next_value(chart1, ser2, lv_rand(30, 70));
         }
         lv_label_set_text(historylabel,tempstr);
@@ -58,6 +60,7 @@ static void meter_event_cb(lv_event_t * e)
             lv_chart_set_next_value(ui_Chart2, mainser, lefl_loop_array_get(&co2_history,i));
             sprintf(tempsubstr,"%.1f\n",lefl_loop_array_get(&co2_history,i));
             strcat(tempstr,tempsubstr);
+            lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_X, 400, 2000);
         //lv_chart_set_next_value(chart1, ser2, lv_rand(30, 70));
         }
         lv_label_set_text(historylabel,tempstr);
@@ -70,6 +73,7 @@ static void meter_event_cb(lv_event_t * e)
             lv_chart_set_next_value(ui_Chart2, mainser, lefl_loop_array_get(&light_history,i));
             sprintf(tempsubstr,"%.1f\n",lefl_loop_array_get(&light_history,i));
             strcat(tempstr,tempsubstr);
+            lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_X, 0, 10000);
         //lv_chart_set_next_value(chart1, ser2, lv_rand(30, 70));
         }
         lv_label_set_text(historylabel,tempstr);
@@ -87,8 +91,8 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_width(ui_Panel1, lv_pct(100));
     lv_obj_set_height(ui_Panel1, lv_pct(15));
     lv_obj_set_align(ui_Panel1, LV_ALIGN_TOP_MID);
-    lv_obj_set_flex_flow(ui_Panel1, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_Panel1, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    //lv_obj_set_flex_flow(ui_Panel1, LV_FLEX_FLOW_ROW);
+    //lv_obj_set_flex_align(ui_Panel1, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_clear_flag(ui_Panel1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
     ui_Label2 = lv_label_create(ui_Panel1);
@@ -314,4 +318,10 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_align(ui_Label12, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label12, "光照强度");
     lv_obj_set_style_text_font(ui_Label12,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Connect_Label = lv_label_create(ui_Panel1);
+    lv_obj_set_width(ui_Connect_Label, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Connect_Label, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Connect_Label, LV_ALIGN_RIGHT_MID);
+    lv_obj_set_style_text_font(ui_Connect_Label,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
 }

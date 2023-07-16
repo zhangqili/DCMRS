@@ -30,6 +30,7 @@ extern lv_obj_t * ui_Label9;
 extern lv_obj_t * ui_Label10;
 extern lv_obj_t * ui_Label11;
 extern lv_obj_t * ui_Label12;
+extern lv_obj_t * ui_Connect_Label;
 // SCREEN: ui_Screen2
 void ui_Screen2_screen_init(void);
 extern lv_obj_t * ui_Screen2;

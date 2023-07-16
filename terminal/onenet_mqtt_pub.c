@@ -200,6 +200,7 @@ int example_mqtt(int argc, const char *argv[])
     printf("Press CTRL-C to exit.\r\n");
     char adc_str[20];
     /* block wait CTRL-C exit */
+    connect_status=1;
     while (1) {
         /*
         //准备数据
@@ -212,21 +213,20 @@ int example_mqtt(int argc, const char *argv[])
         average_filter = 0.0;
         */
         /* publisher*/
-        if(carstate_send_flag)
-        {
-            carstate_send_flag=0;
-        topic = PUBTOPIC;
-        memset(message, 0, sizeof(message));
-        sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"VehicleState\":{\"value\":%d},\"TargetDevice\":{\"value\":\"VEHICLE\"}},\"method\":\"thing.event.property.post\"}",
-                carstate);
-        printf("%s\n", message);
+        if (carstate_send_flag) {
+            carstate_send_flag = 0;
+            topic = PUBTOPIC;
+            memset(message, 0, sizeof(message));
+            sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"VehicleState\":{\"value\":%d},\"TargetDevice\":{\"value\":\"VEHICLE\"}},\"method\":\"thing.event.property.post\"}",
+                    carstate);
+            printf("%s\n", message);
 
-        ret = mqtt_publish(&client, topic,
-                           message, strlen(message) + 1,
-                           MQTT_PUBLISH_QOS_0);
-        if (ret != MQTT_OK) {
-            printf("ERROR! mqtt_publish() %s\r\n", mqtt_error_str(client.error));
-        }
+            ret = mqtt_publish(&client, topic,
+                               message, strlen(message) + 1,
+                               MQTT_PUBLISH_QOS_0);
+            if (ret != MQTT_OK) {
+                printf("ERROR! mqtt_publish() %s\r\n", mqtt_error_str(client.error));
+            }
         }
         vTaskDelay(1000);
     }

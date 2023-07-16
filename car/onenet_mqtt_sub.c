@@ -3,6 +3,7 @@
  * @file
  * A simple program that subscribes to a topic.
  */
+#include "main.h"
 #include "FreeRTOS_POSIX.h"
 #include <unistd.h>
 #include <stdlib.h>
@@ -193,7 +194,17 @@ int example_mqtt(int argc, const char *argv[])
     printf("Press CTRL-C to exit.\r\n");
 
     /* block wait CTRL-C exit */
+    uint8_t led=0;
     while (1) {
+        led=!led;
+        if(led)
+        {
+            bflb_gpio_set(gpio,GPIO_PIN_32);
+        }
+        else
+        {
+            bflb_gpio_reset(gpio,GPIO_PIN_32);
+        }
         vTaskDelay(100);
     }
 
@@ -220,10 +231,11 @@ static void publish_callback_1(void **unused, struct mqtt_response_publish *publ
 
     if (json != NULL) {
         cJSON_ArrayForEach(subobject, json)
-        {
+        { 
             printf("Key: %s\n", subobject->string);
             if (!strcmp(subobject->string, "VehicleState")) {
-                carstate = cJSON_GetObjectItem(subobject, "value")->valueint;
+                carstate = subobject->valueint;
+                printf("\n%d\n",carstate);
             }
         }
         cJSON_Delete(json);

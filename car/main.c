@@ -1,14 +1,4 @@
-#include "bflb_mtimer.h"
-#include "bflb_gpio.h"
-#include "bflb_pwm_v2.h"
-#include "bflb_clock.h"
-#include "bflb_irq.h"
-#include "bflb_mtimer.h"
-#include "bflb_adc.h"
-#include "bflb_i2c.h"
-#include "bflb_irq.h"
-#include "bflb_uart.h"
-#include "board.h"
+#include "main.h"
 
 #include "bl_fw_api.h"
 #include "wifi_mgmr_ext.h"
@@ -247,20 +237,10 @@ void run_straight(void)
 {
 	Give_Motor_PWM(speed,speed);
 }
-uint8_t led=0;
 void run(void *pvParameters)
 {
 	while(1)
 	{
-        led=!led;
-        if(led)
-        {
-            bflb_gpio_set(gpio,GPIO_PIN_32);
-        }
-        else
-        {
-            bflb_gpio_reset(gpio,GPIO_PIN_32);
-        }
         if(!carstate)
         {
             printf("Standby\r\n");
@@ -291,7 +271,7 @@ void run(void *pvParameters)
 	    if(bflb_gpio_read(gpio, IN_3)==0)
 	    {
 	    	run_straight();
-             printf("run_straight\r\n");
+            printf("run_straight\r\n");
 	    }
 
 	    vTaskDelay(200/portTICK_RATE_MS);
