@@ -26,6 +26,10 @@ extern lv_obj_t * ui_Panel5;
 extern lv_obj_t * ui_Panel6;
 extern lv_obj_t * ui_Button2;
 extern lv_obj_t * ui_Label1;
+extern lv_obj_t * ui_Label9;
+extern lv_obj_t * ui_Label10;
+extern lv_obj_t * ui_Label11;
+extern lv_obj_t * ui_Label12;
 // SCREEN: ui_Screen2
 void ui_Screen2_screen_init(void);
 extern lv_obj_t * ui_Screen2;

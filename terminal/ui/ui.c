@@ -20,6 +20,10 @@ lv_obj_t * ui_Panel5;
 lv_obj_t * ui_Panel6;
 lv_obj_t * ui_Button2;
 lv_obj_t * ui_Label1;
+lv_obj_t * ui_Label9;
+lv_obj_t * ui_Label10;
+lv_obj_t * ui_Label11;
+lv_obj_t * ui_Label12;
 
 // SCREEN: ui_Screen2
 void ui_Screen2_screen_init(void);
