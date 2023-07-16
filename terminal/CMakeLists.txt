@@ -12,7 +12,7 @@ target_sources(app PRIVATE
 ./sgp30/driver_sgp30_basic.c 
 ./sgp30/driver_sgp30_interface.c) 
 target_sources(app PRIVATE ./wifi_tcp_server.c)
-target_sources(app PRIVATE ./onenet_mqtt_sub.c)
+target_sources(app PRIVATE ./onenet_mqtt_pub.c)
 target_sources(app PRIVATE
 ./ui/ui_Screen1.c
 ./ui/ui_Screen2.c

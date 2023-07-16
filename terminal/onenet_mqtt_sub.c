@@ -27,16 +27,17 @@ uint8_t recvbuf[1024]; /* recvbuf should be large enough any whole mqtt message 
 shell_sig_func_ptr abort_exec;
 static TaskHandle_t client_daemon;
 int test_sockfd;
-const char* addr;
+const char *addr;
 
 /*
     A template for opening a non-blocking POSIX socket.
 */
 
-int open_nb_socket(const char* addr, const char* port) {
-    struct addrinfo hints = {0};
+int open_nb_socket(const char *addr, const char *port)
+{
+    struct addrinfo hints = { 0 };
 
-    hints.ai_family = AF_UNSPEC; /* IPv4 or IPv6 */
+    hints.ai_family = AF_UNSPEC;     /* IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM; /* Must be TCP */
     int sockfd = -1;
     int rv;
@@ -44,25 +45,26 @@ int open_nb_socket(const char* addr, const char* port) {
 
     /* get address information */
     rv = getaddrinfo(addr, port, &hints, &servinfo);
-    if(rv != 0) {
+    if (rv != 0) {
         printf("Failed to open socket (getaddrinfo): %s\r\n", rv);
         return -1;
     }
 
     /* open the first possible socket */
-    for(p = servinfo; p != NULL; p = p->ai_next) {
+    for (p = servinfo; p != NULL; p = p->ai_next) {
         sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if (sockfd == -1) continue;
+        if (sockfd == -1)
+            continue;
 
         /* connect to server */
         rv = connect(sockfd, p->ai_addr, p->ai_addrlen);
-        if(rv == -1) {
-          close(sockfd);
-          sockfd = -1;
-          continue;
+        if (rv == -1) {
+            close(sockfd);
+            sockfd = -1;
+            continue;
         }
         break;
-    }  
+    }
 
     /* free servinfo */
     freeaddrinfo(servinfo);
@@ -79,7 +81,7 @@ int open_nb_socket(const char* addr, const char* port) {
 /**
  * @brief The function will be called whenever a PUBLISH message is received.
  */
-static void publish_callback_1(void** unused, struct mqtt_response_publish *published);
+static void publish_callback_1(void **unused, struct mqtt_response_publish *published);
 
 /**
  * @brief The client's refresher. This function triggers back-end routines to
@@ -89,15 +91,14 @@ static void publish_callback_1(void** unused, struct mqtt_response_publish *publ
  *       \ref __mqtt_send every so often. I've picked 100 ms meaning that
  *       client ingress/egress traffic will be handled every 100 ms.
  */
-static void client_refresher(void* client);
+static void client_refresher(void *client);
 
 /**
  * @brief Safelty closes the \p sockfd and cancels the \p client_daemon before \c exit.
  */
 static void test_close(int sig)
 {
-    if (test_sockfd)
-    {
+    if (test_sockfd) {
         close(test_sockfd);
     }
     printf("mqtt_sub disconnecting from %s\r\n", addr);
@@ -105,15 +106,14 @@ static void test_close(int sig)
     abort_exec(sig);
 
     vTaskDelete(client_daemon);
-
 }
 
 int example_mqtt(int argc, const char *argv[])
 {
-    const char* port;
-    const char* topic;
-    const char* username;
-    const char* password;
+    const char *port;
+    const char *topic;
+    const char *username;
+    const char *password;
 
     int ret = 0;
     // int argc = 0;
@@ -168,14 +168,13 @@ int example_mqtt(int argc, const char *argv[])
 
     mqtt_init(&client, test_sockfd, sendbuf, sizeof(sendbuf), recvbuf, sizeof(recvbuf), publish_callback_1);
     /* Create an anonymous session */
-    const char* client_id = CLIENTID;
+    const char *client_id = CLIENTID;
     /* Ensure we have a clean session */
     uint8_t connect_flags = MQTT_CONNECT_CLEAN_SESSION;
     /* Send connection request to the broker. */
     ret = mqtt_connect(&client, client_id, NULL, NULL, 0, username, password, connect_flags, 400);
 
-    if (ret != MQTT_OK)
-    {
+    if (ret != MQTT_OK) {
         printf("fail \r\n");
     }
     /* check that we don't have any errors */
@@ -185,7 +184,7 @@ int example_mqtt(int argc, const char *argv[])
     }
 
     /* start a thread to refresh the client (handle egress and ingree client traffic) */
-    xTaskCreate(client_refresher, (char*)"client_ref", 1024,  &client, 10, &client_daemon);
+    xTaskCreate(client_refresher, (char *)"client_ref", 1024, &client, 10, &client_daemon);
 
     /* subscribe */
     mqtt_subscribe(&client, topic, 0);
@@ -195,77 +194,62 @@ int example_mqtt(int argc, const char *argv[])
     printf("Press CTRL-C to exit.\r\n");
 
     /* block wait CTRL-C exit */
-    while(1) {
+    while (1) {
         vTaskDelay(100);
     }
 
     /* disconnect */
     /* exit */
     test_close(SHELL_SIGINT);
-
 }
 
-static void publish_callback_1(void** unused, struct mqtt_response_publish *published)
+static void publish_callback_1(void **unused, struct mqtt_response_publish *published)
 {
     /* note that published->topic_name is NOT null-terminated (here we'll change it to a c-string) */
-    char* topic_name = (char*) malloc(published->topic_name_size + 1);
+    char *topic_name = (char *)malloc(published->topic_name_size + 1);
     memcpy(topic_name, published->topic_name, published->topic_name_size);
     topic_name[published->topic_name_size] = '\0';
 
-    char* topic_msg = (char*) malloc(published->application_message_size + 1);
+    char *topic_msg = (char *)malloc(published->application_message_size + 1);
     memcpy(topic_msg, published->application_message, published->application_message_size);
     topic_msg[published->application_message_size] = '\0';
 
     printf("Received publish('%s'): %s\r\n", topic_name, topic_msg);
     cJSON *json;
     json = cJSON_Parse(topic_msg);
-
-    if(json!=NULL)
-    {
-        cJSON *object = cJSON_GetObjectItem(json, "items");
-        if(object!=NULL)
+    cJSON *subobject;
+    if (json != NULL) {
+        cJSON_ArrayForEach(subobject, json)
         {
-            cJSON *subobject;
-            cJSON_ArrayForEach(subobject,object)
-            {
-                printf("Key: %s\n", subobject->string);
-                if(!strcmp(subobject->string,"EnvironmentHumidity"))
-                {
-                    humidity=subobject->valuedouble;
-                    lefl_loop_array_push_back(&humi_history,subobject->valuedouble);
-                }
-                if(!strcmp(subobject->string,"EnvironmentTemperature"))
-                {
-                    temperature=subobject->valuedouble;
-                    lefl_loop_array_push_back(&temp_history,subobject->valuedouble);
-                }
-                if(!strcmp(subobject->string,"CO2Content"))
-                {
-                    co2content=subobject->valuedouble;
-                    lefl_loop_array_push_back(&co2_history,subobject->valuedouble);
-                }
-                if(!strcmp(subobject->string,"LightLux"))
-                {
-                    lightlux=subobject->valuedouble;
-                    lefl_loop_array_push_back(&light_history,subobject->valuedouble);
-                }
+            printf("Key: %s\n", subobject->string);
+            if (!strcmp(subobject->string, "EnvironmentHumidity")) {
+                humidity = subobject->valuedouble;
+                lefl_loop_array_push_back(&humi_history, subobject->valuedouble);
             }
-            //cJSON_Delete(object);
+            if (!strcmp(subobject->string, "EnvironmentTemperature")) {
+                temperature = subobject->valuedouble;
+                lefl_loop_array_push_back(&temp_history, subobject->valuedouble);
+            }
+            if (!strcmp(subobject->string, "CO2Content")) {
+                co2content = subobject->valuedouble;
+                lefl_loop_array_push_back(&co2_history, subobject->valuedouble);
+            }
+            if (!strcmp(subobject->string, "LightLux")) {
+                lightlux = subobject->valuedouble;
+                lefl_loop_array_push_back(&light_history, subobject->valuedouble);
+            }
         }
         cJSON_Delete(json);
+        free(topic_name);
+        free(topic_msg);
     }
-    free(topic_name);
-    free(topic_msg);
 }
-
-static void client_refresher(void* client)
+static void client_refresher(void *client)
 {
-    while(1)
-    {
-        mqtt_sync((struct mqtt_client*) client);
+    while (1) {
+        mqtt_sync((struct mqtt_client *)client);
         vTaskDelay(100);
     }
-
 }
 
 #ifdef CONFIG_SHELL
@@ -274,8 +258,7 @@ static void client_refresher(void* client)
 extern uint32_t wifi_state;
 static int check_wifi_state(void)
 {
-    if (wifi_state == 1)
-    {
+    if (wifi_state == 1) {
         return 0;
     } else {
         return 1;
@@ -291,7 +274,7 @@ int cmd_mqtt_subscribe(int argc, const char **argv)
         printf("your wifi not connected!\r\n");
         return 0;
     }
-    
+
     // xTaskCreate(example_mqtt,(char*)"test_mqtt", 8192, argv, 10, NULL);
     example_mqtt(argc, argv);
 
