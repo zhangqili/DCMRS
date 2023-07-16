@@ -30,7 +30,7 @@ shell_sig_func_ptr abort_exec;
 static TaskHandle_t client_daemon;
 int test_sockfd;
 const char *addr;
-
+uint8_t carstate_send_flag;
 /*
     A template for opening a non-blocking POSIX socket.
 */
@@ -212,6 +212,9 @@ int example_mqtt(int argc, const char *argv[])
         average_filter = 0.0;
         */
         /* publisher*/
+        if(carstate_send_flag)
+        {
+            carstate_send_flag=0;
         topic = PUBTOPIC;
         memset(message, 0, sizeof(message));
         sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"VehicleState\":{\"value\":%d},\"TargetDevice\":{\"value\":\"VEHICLE\"}},\"method\":\"thing.event.property.post\"}",
@@ -224,7 +227,8 @@ int example_mqtt(int argc, const char *argv[])
         if (ret != MQTT_OK) {
             printf("ERROR! mqtt_publish() %s\r\n", mqtt_error_str(client.error));
         }
-        vTaskDelay(3000);
+        }
+        vTaskDelay(1000);
     }
 
     /* disconnect */

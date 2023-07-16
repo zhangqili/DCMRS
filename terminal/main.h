@@ -33,6 +33,8 @@ extern lefl_loop_array_t humi_history;
 extern lefl_loop_array_t co2_history;
 extern lefl_loop_array_t light_history;
 
+extern uint8_t carstate_send_flag;
+
 extern uint8_t tcp_rec_buf[64];
 extern char *recv_data;
 

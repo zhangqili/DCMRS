@@ -4,12 +4,34 @@
 // Project name: SquareLine_Project
 
 #include "ui.h"
+#include "main.h"
 
 static void back_event_handler(lv_event_t * e)
 {
     lv_event_code_t code = lv_event_get_code(e);
 
     lv_scr_load(ui_Screen1);
+}
+
+static void carstate_event_cb(lv_event_t * e)
+{
+    /*The original target of the event. Can be the buttons or the container*/
+    lv_obj_t * target = lv_event_get_target(e);
+
+    /*The current target is always the container as the event is added to it*/
+    lv_obj_t * cont = lv_event_get_current_target(e);
+
+    /*Make the clicked buttons red*/
+    if(target==ui_Button3)
+    {
+        carstate=1;
+        carstate_send_flag=1;
+    }
+    if(target==ui_Button1)
+    {
+        carstate=0;
+        carstate_send_flag=1;
+    }
 }
 
 void ui_Screen3_screen_init(void)
@@ -56,6 +78,7 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_align(ui_Button3, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Button3, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button3, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_event_cb(ui_Button3,carstate_event_cb,LV_EVENT_CLICKED,NULL);
 
     ui_Label7 = lv_label_create(ui_Button3);
     lv_obj_set_width(ui_Label7, LV_SIZE_CONTENT);   /// 1
@@ -72,6 +95,7 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_align(ui_Button1, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Button1, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_event_cb(ui_Button1,carstate_event_cb,LV_EVENT_CLICKED,NULL);
 
     ui_Label8 = lv_label_create(ui_Button1);
     lv_obj_set_width(ui_Label8, LV_SIZE_CONTENT);   /// 1
