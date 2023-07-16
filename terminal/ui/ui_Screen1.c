@@ -95,7 +95,8 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_width(ui_Label2, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label2, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_Label2, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label2, "Overview");
+    lv_label_set_text(ui_Label2, "总览");
+    lv_obj_set_style_text_font(ui_Label2,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Panel2 = lv_obj_create(ui_Screen1);
     lv_obj_set_height(ui_Panel2, 220);
@@ -270,8 +271,8 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_width(ui_Label1, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label1, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_Label1, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label1, "Car : Stand by");
-
+    lv_label_set_text(ui_Label1, "车辆");
+    lv_obj_set_style_text_font(ui_Label1,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_event_cb(tempmeter,meter_event_cb,LV_EVENT_CLICKED,NULL);
     lv_obj_add_event_cb(humimeter,meter_event_cb,LV_EVENT_CLICKED,NULL);
     lv_obj_add_event_cb(sgp30meter,meter_event_cb,LV_EVENT_CLICKED,NULL);

@@ -18,7 +18,8 @@ target_sources(app PRIVATE
 ./ui/ui_Screen2.c
 ./ui/ui_Screen3.c
 ./ui/ui.c
-./ui/ui_helpers.c)
+./ui/ui_helpers.c
+./ui/lv_font_Chinese_src_regular.c)
 target_sources(app PRIVATE
 ./cJSON/cJSON.c
 ./cJSON/cJSON_Utils.c)

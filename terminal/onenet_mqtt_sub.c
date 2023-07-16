@@ -222,29 +222,29 @@ static void publish_callback_1(void** unused, struct mqtt_response_publish *publ
 
     if(json!=NULL)
     {
-        cJSON *object = cJSON_GetObjectItem(json, "params");
+        cJSON *object = cJSON_GetObjectItem(json, "items");
         if(object!=NULL)
         {
             cJSON *subobject;
             cJSON_ArrayForEach(subobject,object)
             {
                 printf("Key: %s\n", subobject->string);
-                if(!strcmp(subobject->string,"humi"))
+                if(!strcmp(subobject->string,"EnvironmentHumidity"))
                 {
                     humidity=subobject->valuedouble;
                     lefl_loop_array_push_back(&humi_history,subobject->valuedouble);
                 }
-                if(!strcmp(subobject->string,"temp"))
+                if(!strcmp(subobject->string,"EnvironmentTemperature"))
                 {
                     temperature=subobject->valuedouble;
                     lefl_loop_array_push_back(&temp_history,subobject->valuedouble);
                 }
-                if(!strcmp(subobject->string,"co2"))
+                if(!strcmp(subobject->string,"CO2Content"))
                 {
                     co2content=subobject->valuedouble;
                     lefl_loop_array_push_back(&co2_history,subobject->valuedouble);
                 }
-                if(!strcmp(subobject->string,"light"))
+                if(!strcmp(subobject->string,"LightLux"))
                 {
                     lightlux=subobject->valuedouble;
                     lefl_loop_array_push_back(&light_history,subobject->valuedouble);

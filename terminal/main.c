@@ -37,6 +37,8 @@ struct bflb_device_s *gpio;
 struct bflb_device_s *adc;
 struct bflb_device_s *i2c0;
 
+uint8_t carstate;
+
 uint8_t tcp_rec_buf[64];
 /****************************************************************************
  * Pre-processor Definitions
@@ -268,7 +270,7 @@ int main(void)
     adc = bflb_device_get_by_name("adc");
     TEMT6000_Init(ADC_CHANNEL_10);
     //TEMT6000_Read(&adc_result);
-    sgp30_basic_init();
+    //sgp30_basic_init();
     //sgp30_basic_read(&co2, &tvoc);
     // bflb_cam_stop(cam0);
 
@@ -286,7 +288,7 @@ int main(void)
     wifi_mgmr_init(&conf);
     tcpip_init(NULL, NULL);
 
-    //xTaskCreate(lvgl_task, (char *)"lvgl_task", 1024, NULL, configMAX_PRIORITIES - 4, &lvgl_handle);	
+    xTaskCreate(lvgl_task, (char *)"lvgl_task", 1024, NULL, configMAX_PRIORITIES - 4, &lvgl_handle);	
     //xTaskCreate(data_task, (char *)"data_task", 512, NULL, configMAX_PRIORITIES - 3, &data_handle);	
     xTaskCreate(wifi_task, (char *)"wifi_task", 2048, NULL, configMAX_PRIORITIES - 2, &wifi_handle);							
     vTaskStartScheduler();

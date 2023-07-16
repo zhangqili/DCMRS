@@ -36,6 +36,11 @@ lv_obj_t * ui_Screen3;
 lv_obj_t * ui_Panel9;
 lv_obj_t * ui_ImgButton1;
 lv_obj_t * ui_Label4;
+lv_obj_t * ui_Label6;
+lv_obj_t * ui_Button3;
+lv_obj_t * ui_Label7;
+lv_obj_t * ui_Button1;
+lv_obj_t * ui_Label8;
 lv_obj_t * ui____initial_actions0;
 
 

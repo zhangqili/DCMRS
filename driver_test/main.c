@@ -45,7 +45,7 @@ int main(void)
         //printf("CO2:%d, TVOC:%d\n", co2, tvoc);
         printf("hello, world\n");
         printf("temp:%f\n",(dht22_dat.temp_high*256+dht22_dat.temp_low+13)/10.0);
-        printf("humi:%f\n",(dht22_dat.temp_high*256+dht22_dat.humi_low+2)/10.0);
+        printf("humi:%f\n",(dht22_dat.humi_high*256+dht22_dat.humi_low+2)/10.0);
         //bflb_gpio_set(gpio, GPIO_PIN_0);
         //printf("GPIO_PIN_1=%x\r\n", bflb_gpio_read(gpio, GPIO_PIN_1));
         //bflb_mtimer_delay_ms(2000);

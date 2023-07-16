@@ -9,7 +9,6 @@
 #include "bflb_i2c.h"
 #include "bflb_irq.h"
 #include "bflb_uart.h"
-#include "board.h"
 #include "log.h"
 
 #define USE_WIFI 0

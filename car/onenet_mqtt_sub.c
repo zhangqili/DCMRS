@@ -20,7 +20,6 @@
 #include "mqtt_user.h"
 
 #include "cJSON.h"
-#include "main.h"
 uint8_t sendbuf[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
 uint8_t recvbuf[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
 
@@ -222,32 +221,18 @@ static void publish_callback_1(void** unused, struct mqtt_response_publish *publ
 
     if(json!=NULL)
     {
-        cJSON *object = cJSON_GetObjectItem(json, "params");
+        
+        cJSON *object = cJSON_GetObjectItem(json, "items");
         if(object!=NULL)
         {
             cJSON *subobject;
             cJSON_ArrayForEach(subobject,object)
             {
                 printf("Key: %s\n", subobject->string);
-                if(!strcmp(subobject->string,"EnvironmentHumidity"))
+                if(!strcmp(subobject->string,"VehicleState"))
                 {
-                    humidity=subobject->valuedouble;
-                    lefl_loop_array_push_back(&humi_history,subobject->valuedouble);
-                }
-                if(!strcmp(subobject->string,"EnvironmentTemperature"))
-                {
-                    temperature=subobject->valuedouble;
-                    lefl_loop_array_push_back(&temp_history,subobject->valuedouble);
-                }
-                if(!strcmp(subobject->string,"CO2Content"))
-                {
-                    co2content=subobject->valuedouble;
-                    lefl_loop_array_push_back(&co2_history,subobject->valuedouble);
-                }
-                if(!strcmp(subobject->string,"LightLux"))
-                {
-                    lightlux=subobject->valuedouble;
-                    lefl_loop_array_push_back(&light_history,subobject->valuedouble);
+                    carstate = cJSON_GetObjectItem(subobject, "value")->valueint;
+
                 }
             }
             //cJSON_Delete(object);

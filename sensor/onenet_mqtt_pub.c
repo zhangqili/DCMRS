@@ -237,13 +237,21 @@ int example_mqtt(int argc, const char *argv[])
         average_filter = 0.0;
         */
         TEMT6000_Read(&adc_result);
+        DHT22_ReadData(&dht22_dat);
+        sgp30_basic_read(&co2, &tvoc);
         printf("adc_result.millivolt==%d\n",adc_result.millivolt);
         //sprintf(adc_str,"%.1f",3.333*(float)(adc_result.millivolt));
         printf("adc_result==%.1f\n",3.333*(float)(adc_result.millivolt));
         /* publisher*/
         topic = PUBTOPIC;
         memset(message, 0, sizeof(message));
-        sprintf(message,"{\"id\":\"123\",\"version\":\"1.0\",\"params\": {\"CO2Content\": {\"value\":%.1f},\"LightLux\": {\"value\":%.1f}}}",23.3,3.333*(float)(adc_result.millivolt));
+        sprintf(message,"{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"EnvironmentTemperature\":{\"value\":%.1f},\"CO2Content\":{\"value\":%d},\"LightLux\":{\"value\":%.1f},\"EnvironmentHumidity\":{\"value\":%.1f},\"TargetDevice\":{\"value\":\"TERMINAL\"}},\"method\":\"thing.event.property.post\",\"TargetDevice\":\"TERMINAL\"}",
+        (dht22_dat.temp_high*256+dht22_dat.temp_low+13)/10.0,//Temperature
+        co2,//CO2
+        3.333*(float)(adc_result.millivolt),//LIGHT
+        (dht22_dat.humi_high*256+dht22_dat.humi_low+2)/10.0//Humidity
+        );
+        
         //printf("{\"id\":\"123\",\"version\":\"1.0\",\"params\": {\"CO2Content\": {\"value\":%.1f},\"LightLux\": {\"value\":%1.f}}}\n",co2,3.333*(float)(adc_result.millivolt));
         printf("%s\n",message);
         

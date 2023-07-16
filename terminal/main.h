@@ -26,6 +26,8 @@ extern float humidity;
 extern float co2content;
 extern float lightlux;
 
+extern uint8_t carstate;
+
 extern lefl_loop_array_t temp_history;
 extern lefl_loop_array_t humi_history;
 extern lefl_loop_array_t co2_history;

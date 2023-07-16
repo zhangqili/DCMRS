@@ -28,7 +28,8 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_width(ui_ImgButton2, 72);
     lv_obj_set_align(ui_ImgButton2, LV_ALIGN_LEFT_MID);
     lv_obj_t * backlabel = lv_label_create(ui_ImgButton2);
-    lv_label_set_text(backlabel, "< Back");
+    lv_label_set_text(backlabel, "< 返回");
+    lv_obj_set_style_text_font(backlabel,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_center(backlabel);
     //lv_img_set_src(ui_ImgButton1, LV_SYMBOL_BACKSPACE);
     lv_obj_add_event_cb(ui_ImgButton2,back_event_handler,LV_EVENT_CLICKED,NULL);
@@ -37,7 +38,8 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_width(ui_Label3, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label3, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label3, "History");
+    lv_label_set_text(ui_Label3, "历史");
+    lv_obj_set_style_text_font(ui_Label3,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Panel8 = lv_obj_create(ui_Screen2);
     lv_obj_set_width(ui_Panel8, lv_pct(100));

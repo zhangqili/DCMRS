@@ -40,6 +40,11 @@ extern lv_obj_t * ui_Screen3;
 extern lv_obj_t * ui_Panel9;
 extern lv_obj_t * ui_ImgButton1;
 extern lv_obj_t * ui_Label4;
+extern lv_obj_t * ui_Label6;
+extern lv_obj_t * ui_Button3;
+extern lv_obj_t * ui_Label7;
+extern lv_obj_t * ui_Button1;
+extern lv_obj_t * ui_Label8;
 extern lv_obj_t * ui____initial_actions0;
 
 extern lv_obj_t * temt6000meter;
@@ -60,6 +65,8 @@ extern lv_chart_series_t * mainser;
 
 extern lv_obj_t * historylabel;
 void ui_init(void);
+
+LV_FONT_DECLARE(lv_font_Chinese_src_regular)
 
 #ifdef __cplusplus
 } /*extern "C"*/
