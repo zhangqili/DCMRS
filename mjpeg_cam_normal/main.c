@@ -1,184 +1,3 @@
-// #include "bflb_mtimer.h"
-// #include "board.h"
-// #include "lcd_conf_user.h"
-// #include "lcd.h"
-
-// #include "bflb_irq.h"
-// #include "bflb_uart.h"
-// #include "bflb_i2c.h"
-// #include "bflb_cam.h"
-// #include "image_sensor.h"
-
-// #include "bl616_glb.h"
-// #include "bflb_dma.h"
-// #include "bflb_mjpeg.h"
-// #include "jpeg_head.h"
-
-// #define BLOCK_NUM           2 //å®šä¹‰äº†å›¾åƒå¤„ç†ä¸­çš„å—æ•°é‡ã€‚æ¯ä¸ªå—å¯ä»¥çœ‹ä½œæ˜¯å›¾åƒçš„ä¸€éƒ¨åˆ†ï¼Œç”¨äºåˆ†å—å¤„ç†å›¾åƒæ•°æ®ã€‚
-// #define ROW_NUM             (160 * BLOCK_NUM)  //å®šä¹‰äº†æ¯ä¸ªå—ä¸­çš„è¡Œæ•°ã€‚æ¯ä¸ªå—ä¸­çš„è¡Œæ•°å†³å®šäº†å¤„ç†çš„å›¾åƒæ•°æ®çš„é«˜åº¦ã€‚è¿™ä¸ªå€¼é€šè¿‡ä¹˜ä»¥ BLOCK_NUM è®¡ç®—å¾—åˆ°ã€‚
-// #define CAM_FRAME_COUNT_USE 5 //å®šä¹‰äº†éœ€è¦å¤„ç†çš„å›¾åƒå¸§æ•°é‡
-// #define CROP_WQVGA_X        (240)
-// #define CAM_BUFF_NUM        (4)
-
-// static struct bflb_device_s *i2c0;
-// static struct bflb_device_s *cam0;
-
-// static struct bflb_device_s *mjpeg;
-
-// volatile uint32_t pic_count = 0;
-// volatile uint32_t pic_addr[CAM_FRAME_COUNT_USE] = { 0 };
-// volatile uint32_t pic_len[CAM_FRAME_COUNT_USE] = { 0 };
-
-// void mjpeg_isr(int irq, void *arg)
-// {
-//     uint8_t *pic;
-//     uint32_t jpeg_len;
-
-//     uint32_t intstatus = bflb_mjpeg_get_intstatus(mjpeg);//è¡¨ç¤ºä¸­æ–­çŠ¶æ€
-//     if (intstatus & MJPEG_INTSTS_ONE_FRAME) {
-//         bflb_mjpeg_int_clear(mjpeg, MJPEG_INTCLR_ONE_FRAME);//æ¸…æ¥šä¸­æ–­æ ‡å¿—ä½
-//         jpeg_len = bflb_mjpeg_get_frame_info(mjpeg, &pic);
-//         pic_addr[pic_count] = (uint32_t)pic;
-//         pic_len[pic_count] = jpeg_len;
-//         pic_count++;
-//         bflb_mjpeg_pop_one_frame(mjpeg);
-//         lcd_draw_picture_nonblocking(0,0,CROP_WQVGA_X,ROW_NUM, pic); // æ˜¾ç¤ºå›¾åƒåˆ°LCDå±å¹•ä¸Š
-//         if (pic_count == CAM_FRAME_COUNT_USE) {
-//            // bflb_cam_stop(cam0);
-//             //bflb_mjpeg_stop(mjpeg);
-//             //å¦‚æœé•¿æœŸå‹ç¼©å›¾åƒä½†æ˜¯åªç»™ä¸€å®šçš„å›¾åƒä¼šå¯¼è‡´ç¨‹åºæ­»æ‰å› æ­¤ä¸èƒ½åœä¸‹æ¥
-//             pic_count=0;
-//         }
-
-//     }
-// }
-
-// // void mjpeg_isr(int irq, void *arg)
-// // {
-// //     uint8_t *pic;
-// //     uint32_t jpeg_len;
-
-// //     uint32_t intstatus = bflb_mjpeg_get_intstatus(mjpeg);//è¡¨ç¤ºä¸­æ–­çŠ¶æ€
-// //     if (intstatus & MJPEG_INTSTS_ONE_FRAME) {
-// //         bflb_mjpeg_int_clear(mjpeg, MJPEG_INTCLR_ONE_FRAME);//æ¸…æ¥šä¸­æ–­æ ‡å¿—ä½
-// //         jpeg_len = bflb_mjpeg_get_frame_info(mjpeg, &pic);
-// //         pic_addr[pic_count] = (uint32_t)pic;
-// //         pic_len[pic_count] = jpeg_len;
-// //         pic_count++;
-// //         bflb_mjpeg_pop_one_frame(mjpeg);
-// //         if (pic_count == CAM_FRAME_COUNT_USE) {
-// //             bflb_cam_stop(cam0);
-// //             bflb_mjpeg_stop(mjpeg);
-// //         }
-// //     }
-// // }
-
-// uint8_t jpg_head_buf[800] = { 0 };
-// uint32_t jpg_head_len;
-
-// uint8_t MJPEG_QUALITY = 50;
-
-// #define SIZE_BUFFER (4 * 1024 * 1024)
-
-// void bflb_mjpeg_dump_hex(uint8_t *data, uint32_t len)
-// {
-//     uint32_t i = 0;
-
-//     for (i = 0; i < len; i++) {
-//         if (i % 16 == 0) {
-//             printf("\r\n");
-//         }
-
-//         printf("%02x ", data[i]);
-//     }
-
-//     printf("\r\n");
-// }
-
-// int main(void)
-// {
-//    // uint8_t *pic_orig;
-//     //static uint8_t picture[CROP_WQVGA_X * ROW_NUM * CAM_BUFF_NUM] ATTR_NOINIT_PSRAM_SECTION __attribute__((aligned(64)));
-//     struct bflb_cam_config_s cam_config;
-//     struct image_sensor_config_s *sensor_config;
-//     static struct bflb_device_s *i2c0;
-//     static struct bflb_device_s *cam0;
-//     board_init();
-//     board_dvp_gpio_init();
-//     board_i2c0_gpio_init(); // åˆå§‹åŒ–I2Cæ¥å£çš„GPIOå¼•è„š
-//     lcd_init(); // åˆå§‹åŒ–LCDå±å¹•
-//     lcd_clear(0x0000); // æ¸…ç©ºLCDå±å¹•
-
-//     i2c0 = bflb_device_get_by_name("i2c0");
-//     cam0 = bflb_device_get_by_name("cam0");
-
-//     if (image_sensor_scan(i2c0, &sensor_config)) {
-//         printf("\r\nSensor name: %s\r\n", sensor_config->name);
-//     } else {
-//         printf("\r\nError! Can't identify sensor!\r\n");
-//         while (1) {
-//         }
-//     }
-//     /* Crop resolution_x, should be set before init */
-//     bflb_cam_crop_hsync(cam0, 112, 112 + CROP_WQVGA_X); // è®¾ç½®æ°´å¹³æ–¹å‘çš„è£å‰ªèŒƒå›´
-//     /* Crop resolution_y, should be set before init */
-//     bflb_cam_crop_vsync(cam0, 120, 120 + ROW_NUM); // è®¾ç½®å‚ç›´æ–¹å‘çš„è£å‰ªèŒƒå›´
-//     memcpy(&cam_config, sensor_config, IMAGE_SENSOR_INFO_COPY_SIZE);
-//     cam_config.with_mjpeg = true;
-//     cam_config.input_source = CAM_INPUT_SOURCE_DVP;
-//     cam_config.output_format = CAM_OUTPUT_FORMAT_AUTO;
-//     // cam_config.output_bufaddr = (uint32_t)picture;
-//     cam_config.output_bufaddr = BFLB_PSRAM_BASE;//0XA8000000
-//     cam_config.output_bufsize = CROP_WQVGA_X *(CAM_BUFF_NUM /2) * ROW_NUM;
-
-//     bflb_cam_init(cam0, &cam_config);
-//     bflb_cam_start(cam0);
-
-//     mjpeg = bflb_device_get_by_name("mjpeg");
-
-//     struct bflb_mjpeg_config_s config;
-
-//     config.format = MJPEG_FORMAT_YUV422_YUYV;
-//     config.quality = MJPEG_QUALITY;
-//     config.rows = ROW_NUM;
-//     config.resolution_x = cam_config.resolution_x;
-//     config.resolution_y = cam_config.resolution_y;
-//     config.input_bufaddr0 = (uint32_t)BFLB_PSRAM_BASE;
-//     config.input_bufaddr1 = 0;
-//     config.output_bufaddr = (uint32_t)BFLB_PSRAM_BASE + cam_config.resolution_x * 2 * ROW_NUM;
-//     config.output_bufsize = SIZE_BUFFER - cam_config.resolution_x * 2 * ROW_NUM;
-//     config.input_yy_table = NULL; /* use default table */
-//     config.input_uv_table = NULL; /* use default table */
-
-//     bflb_mjpeg_init(mjpeg, &config);
-//     lcd_set_dir(2,0); // è®¾ç½®LCDå±å¹•æ–¹å‘ä¸º180åº¦
-//     printf("cam lcd case\r\n"); // è¾“å‡ºä¿¡æ¯
-    
-//     // jpg_head_len = JpegHeadCreate(YUV_MODE_422, MJPEG_QUALITY, cam_config.resolution_x, cam_config.resolution_y, jpg_head_buf);
-//     // bflb_mjpeg_fill_jpeg_header_tail(mjpeg, jpg_head_buf, jpg_head_len);
-
-//     bflb_mjpeg_tcint_mask(mjpeg, false);
-//     bflb_irq_attach(mjpeg->irq_num, mjpeg_isr, NULL);
-//     bflb_irq_enable(mjpeg->irq_num);
-
-//     bflb_mjpeg_start(mjpeg);
-
-//     while (pic_count < CAM_FRAME_COUNT_USE) {
-//         printf("pic count:%d\r\n", pic_count);
-//         bflb_mtimer_delay_ms(200);
-//     }
-
-//     for (uint8_t i = 0; i < CAM_FRAME_COUNT_USE; i++) {
-//         printf("jpg addr:%08x ,jpg size:%d\r\n", pic_addr[i], pic_len[i]);
-//         //bflb_mjpeg_dump_hex((uint8_t *)pic_addr[i], pic_len[i]);
-//     }
-//     while (1) 
-//     {
-//             bflb_mtimer_delay_ms(1000);
-//     }
-// }
-
-
 #include "bflb_mtimer.h"
 #include "board.h"
 #include "lcd_conf_user.h"
@@ -195,15 +14,15 @@
 #include "bflb_mjpeg.h"
 #include "jpeg_head.h"
 #include "decompressed.h"
-#define BLOCK_NUM           2 //å®šä¹‰äº†å›¾åƒå¤„ç†ä¸­çš„å—æ•°é‡ã€‚æ¯ä¸ªå—å¯ä»¥çœ‹ä½œæ˜¯å›¾åƒçš„ä¸€éƒ¨åˆ†ï¼Œç”¨äºåˆ†å—å¤„ç†å›¾åƒæ•°æ®ã€‚
-#define ROW_NUM             (110 * BLOCK_NUM)  //å®šä¹‰äº†æ¯ä¸ªå—ä¸­çš„è¡Œæ•°ã€‚æ¯ä¸ªå—ä¸­çš„è¡Œæ•°å†³å®šäº†å¤„ç†çš„å›¾åƒæ•°æ®çš„é«˜åº¦ã€‚è¿™ä¸ªå€¼é€šè¿‡ä¹˜ä»¥ BLOCK_NUM è®¡ç®—å¾—åˆ°ã€‚
-#define CAM_FRAME_COUNT_USE 5 //å®šä¹‰äº†éœ€è¦å¤„ç†çš„å›¾åƒå¸§æ•°é‡
+#define BLOCK_NUM           2 //¶¨ÒåÁËÍ¼Ïñ´¦ÀíÖĞµÄ¿éÊıÁ¿¡£Ã¿¸ö¿é¿ÉÒÔ¿´×÷ÊÇÍ¼ÏñµÄÒ»²¿·Ö£¬ÓÃÓÚ·Ö¿é´¦ÀíÍ¼ÏñÊı¾İ¡£
+#define ROW_NUM             (110 * BLOCK_NUM)  //¶¨ÒåÁËÃ¿¸ö¿éÖĞµÄĞĞÊı¡£Ã¿¸ö¿éÖĞµÄĞĞÊı¾ö¶¨ÁË´¦ÀíµÄÍ¼ÏñÊı¾İµÄ¸ß¶È¡£Õâ¸öÖµÍ¨¹ı³ËÒÔ BLOCK_NUM ¼ÆËãµÃµ½¡£
+#define CAM_FRAME_COUNT_USE 5 //¶¨ÒåÁËĞèÒª´¦ÀíµÄÍ¼ÏñÖ¡ÊıÁ¿
 #define CROP_WQVGA_X        (240)
 static struct bflb_device_s *i2c0;
 static struct bflb_device_s *cam0;
 
 static struct bflb_device_s *mjpeg;
-//volatileå‘Šè¯‰ç¼–è¯‘å™¨è¿™ä¸ªå˜é‡å¯èƒ½ä¼šæ”¹å˜
+//volatile¸æËß±àÒëÆ÷Õâ¸ö±äÁ¿¿ÉÄÜ»á¸Ä±ä
 volatile uint32_t pic_count = 0;
 volatile uint32_t pic_addr[CAM_FRAME_COUNT_USE] = { 0 };
 volatile uint32_t pic_len[CAM_FRAME_COUNT_USE] = { 0 };
@@ -216,21 +35,18 @@ void mjpeg_isr(int irq, void *arg)
     //uint8_t *pic;
     uint32_t jpeg_len;
 
-    uint32_t intstatus = bflb_mjpeg_get_intstatus(mjpeg);//è¡¨ç¤ºä¸­æ–­çŠ¶æ€
+    uint32_t intstatus = bflb_mjpeg_get_intstatus(mjpeg);//±íÊ¾ÖĞ¶Ï×´Ì¬
     if (intstatus & MJPEG_INTSTS_ONE_FRAME) {
-        bflb_mjpeg_int_clear(mjpeg, MJPEG_INTCLR_ONE_FRAME);//æ¸…æ¥šä¸­æ–­æ ‡å¿—ä½
+        bflb_mjpeg_int_clear(mjpeg, MJPEG_INTCLR_ONE_FRAME);//Çå³şÖĞ¶Ï±êÖ¾Î»
         jpeg_len = bflb_mjpeg_get_frame_info(mjpeg, &pic);
         pic_addr[pic_count] = (uint32_t)pic;
         pic_len[pic_count] = jpeg_len;
         pic_count++;
-        //bflb_mjpeg_pop_one_frame(mjpeg);
-        //yuyv_to_rgb(pic,picture,CROP_WQVGA_X,ROW_NUM);
-       // printf("ç¬¬%då¸§å‹ç¼©å›¾åƒçš„å¤§å°: %d\r\n",pic_count,jpeg_len);
-        //lcd_draw_picture_nonblocking(0,0,CROP_WQVGA_X,ROW_NUM, pic); // æ˜¾ç¤ºå›¾åƒåˆ°LCDå±å¹•ä¸Š
+        printf("count %d   pic_len%d\r\n",pic_count,pic_len);
         if (pic_count == CAM_FRAME_COUNT_USE) {
            // bflb_cam_stop(cam0);
             //bflb_mjpeg_stop(mjpeg);
-            //å¦‚æœé•¿æœŸå‹ç¼©å›¾åƒä½†æ˜¯åªç»™ä¸€å®šçš„å›¾åƒä¼šå¯¼è‡´ç¨‹åºæ­»æ‰å› æ­¤ä¸èƒ½åœä¸‹æ¥
+            //Èç¹û³¤ÆÚÑ¹ËõÍ¼Ïñµ«ÊÇÖ»¸øÒ»¶¨µÄÍ¼Ïñ»áµ¼ÖÂ³ÌĞòËÀµôÒò´Ë²»ÄÜÍ£ÏÂÀ´
             pic_count=0;
         }
 
@@ -242,9 +58,9 @@ void mjpeg_isr(int irq, void *arg)
 //     uint8_t *pic;
 //     uint32_t jpeg_len;
 
-//     uint32_t intstatus = bflb_mjpeg_get_intstatus(mjpeg);//è¡¨ç¤ºä¸­æ–­çŠ¶æ€
+//     uint32_t intstatus = bflb_mjpeg_get_intstatus(mjpeg);//±íÊ¾ÖĞ¶Ï×´Ì¬
 //     if (intstatus & MJPEG_INTSTS_ONE_FRAME) {
-//         bflb_mjpeg_int_clear(mjpeg, MJPEG_INTCLR_ONE_FRAME);//æ¸…æ¥šä¸­æ–­æ ‡å¿—ä½
+//         bflb_mjpeg_int_clear(mjpeg, MJPEG_INTCLR_ONE_FRAME);//Çå³şÖĞ¶Ï±êÖ¾Î»
 //         jpeg_len = bflb_mjpeg_get_frame_info(mjpeg, &pic);
 //         pic_addr[pic_count] = (uint32_t)pic;
 //         pic_len[pic_count] = jpeg_len;
@@ -287,9 +103,9 @@ int main(void)
     static struct bflb_device_s *cam0;
     board_init();
     board_dvp_gpio_init();
-    board_i2c0_gpio_init(); // åˆå§‹åŒ–I2Cæ¥å£çš„GPIOå¼•è„š
-    lcd_init(); // åˆå§‹åŒ–LCDå±å¹•
-    lcd_clear(0x0000); // æ¸…ç©ºLCDå±å¹•
+    board_i2c0_gpio_init(); // ³õÊ¼»¯I2C½Ó¿ÚµÄGPIOÒı½Å
+    lcd_init(); // ³õÊ¼»¯LCDÆÁÄ»
+    lcd_clear(0x0000); // Çå¿ÕLCDÆÁÄ»
 
     i2c0 = bflb_device_get_by_name("i2c0");
     cam0 = bflb_device_get_by_name("cam0");
@@ -302,9 +118,9 @@ int main(void)
         }
     }
     /* Crop resolution_x, should be set before init */
-    bflb_cam_crop_hsync(cam0, 112, 112 + CROP_WQVGA_X); // è®¾ç½®æ°´å¹³æ–¹å‘çš„è£å‰ªèŒƒå›´
+    bflb_cam_crop_hsync(cam0, 112, 112 + CROP_WQVGA_X); // ÉèÖÃË®Æ½·½ÏòµÄ²Ã¼ô·¶Î§
     /* Crop resolution_y, should be set before init */
-    bflb_cam_crop_vsync(cam0, 120, 120 + 160); // è®¾ç½®å‚ç›´æ–¹å‘çš„è£å‰ªèŒƒå›´
+    bflb_cam_crop_vsync(cam0, 120, 120 + 160); // ÉèÖÃ´¹Ö±·½ÏòµÄ²Ã¼ô·¶Î§
     memcpy(&cam_config, sensor_config, IMAGE_SENSOR_INFO_COPY_SIZE);
     cam_config.with_mjpeg = true;
     cam_config.input_source = CAM_INPUT_SOURCE_DVP;
@@ -332,9 +148,9 @@ int main(void)
     config.input_uv_table = NULL; /* use default table */
 
     bflb_mjpeg_init(mjpeg, &config);
-    lcd_set_dir(2,0); // è®¾ç½®LCDå±å¹•æ–¹å‘ä¸º180åº¦
+    lcd_set_dir(2,0); // ÉèÖÃLCDÆÁÄ»·½ÏòÎª180¶È
 
-    printf("cam lcd case\r\n"); // è¾“å‡ºä¿¡æ¯
+    printf("cam lcd case\r\n"); // Êä³öĞÅÏ¢
     //jpg_head_len = JpegHeadCreate(YUV_MODE_422, MJPEG_QUALITY, cam_config.resolution_x, cam_config.resolution_y, jpg_head_buf);
     //bflb_mjpeg_fill_jpeg_header_tail(mjpeg, jpg_head_buf, jpg_head_len);
 
@@ -353,13 +169,14 @@ int main(void)
     {
         if(bflb_mjpeg_get_frame_count(mjpeg)>0)
         {
+            //µ¯³öÒ»ÕÅÑ¹ËõÒÔºóÍ¼Æ¬
             bflb_mjpeg_pop_one_frame(mjpeg);
-            printf("æ­£åœ¨æ˜¾ç¤º");
+            printf("ÕıÔÚÏÔÊ¾");
             // for(int i=0;i<CROP_WQVGA_X * ROW_NUM * 2;i++)
             // printf("%d :%d\r\n",i,pic_now[i]);
             yuyv_to_rgb(pic,picture,CROP_WQVGA_X,ROW_NUM);
             //bflb_mtimer_delay_ms(200);
-            lcd_draw_picture_nonblocking(0,0,CROP_WQVGA_X,160, pic_now);
+            lcd_draw_picture_nonblocking(0,0,CROP_WQVGA_X,160, picture);
         }
 
         /* code */
