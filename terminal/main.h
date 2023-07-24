@@ -38,4 +38,6 @@ extern uint8_t carstate_send_flag;
 extern uint8_t tcp_rec_buf[64];
 extern char *recv_data;
 
+extern char dates[16][32];
+
 #endif MAIN_H_

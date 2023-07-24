@@ -14,7 +14,7 @@ static void car_btn_event_handler(lv_event_t * e)
 }
 
 static char tempsubstr[16];
-static char tempstr[256];
+static char tempstr[512];
 static void meter_event_cb(lv_event_t * e)
 {
     /*The original target of the event. Can be the buttons or the container*/
@@ -26,41 +26,48 @@ static void meter_event_cb(lv_event_t * e)
     memset(tempstr, 0, sizeof(tempstr));
     /*If container was clicked do nothing*/
     //if(target == cont) return;
+    strcat(tempstr,"\n\n\n");
 
     /*Make the clicked buttons red*/
     if(target==tempmeter)
     {
-        for(uint8_t i = 0; i < 10; i++)
+        for(int8_t i = 0; i < 10; i++)
         {
             lv_chart_set_next_value(ui_Chart2, mainser, lefl_loop_array_get(&temp_history,i));
-            sprintf(tempsubstr,"%.1f\n",lefl_loop_array_get(&temp_history,i));
+            sprintf(tempsubstr,"%.1f\t",lefl_loop_array_get(&temp_history,i));
             strcat(tempstr,tempsubstr);
+            strcat(tempstr,dates[temp_history.index-i>=0?temp_history.index-i:temp_history.index-i+16]);
+            strcat(tempstr,"\n");
         //lv_chart_set_next_value(chart1, ser2, lv_rand(30, 70));
         }
-        lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_X, -40, 55);
+        lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_Y, -40, 55);
         lv_label_set_text(historylabel,tempstr);
     }
     if(target==humimeter)
     {
 
-        for(uint8_t i = 0; i < 10; i++)
+        for(int8_t i = 0; i < 10; i++)
         {
             lv_chart_set_next_value(ui_Chart2, mainser, lefl_loop_array_get(&humi_history,i));
             sprintf(tempsubstr,"%.1f\n",lefl_loop_array_get(&humi_history,i));
             strcat(tempstr,tempsubstr);
-            lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_X, 0, 100);
+            lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
+            strcat(tempstr,dates[humi_history.index-i>=0?humi_history.index-i:humi_history.index-i+16]);
+            strcat(tempstr,"\n");
         //lv_chart_set_next_value(chart1, ser2, lv_rand(30, 70));
         }
         lv_label_set_text(historylabel,tempstr);
     }
     if(target==sgp30meter)
     {
-        for(uint8_t i = 0; i < 10; i++)
+        for(int8_t i = 0; i < 10; i++)
         {
             lv_chart_set_next_value(ui_Chart2, mainser, lefl_loop_array_get(&co2_history,i));
             sprintf(tempsubstr,"%.1f\n",lefl_loop_array_get(&co2_history,i));
             strcat(tempstr,tempsubstr);
-            lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_X, 400, 2000);
+            lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_Y, 400, 2000);
+            strcat(tempstr,dates[co2_history.index-i>=0?co2_history.index-i:co2_history.index-i+16]);
+            strcat(tempstr,"\n");
         //lv_chart_set_next_value(chart1, ser2, lv_rand(30, 70));
         }
         lv_label_set_text(historylabel,tempstr);
@@ -68,12 +75,14 @@ static void meter_event_cb(lv_event_t * e)
     }
     if(target==temt6000meter)
     {
-        for(uint8_t i = 0; i < 10; i++)
+        for(int8_t i = 0; i < 10; i++)
         {
             lv_chart_set_next_value(ui_Chart2, mainser, lefl_loop_array_get(&light_history,i));
             sprintf(tempsubstr,"%.1f\n",lefl_loop_array_get(&light_history,i));
             strcat(tempstr,tempsubstr);
-            lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_X, 0, 10000);
+            lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_PRIMARY_Y, 0, 10000);
+            strcat(tempstr,dates[light_history.index-i>=0?light_history.index-i:light_history.index-i+16]);
+            strcat(tempstr,"\n");
         //lv_chart_set_next_value(chart1, ser2, lv_rand(30, 70));
         }
         lv_label_set_text(historylabel,tempstr);
@@ -286,8 +295,8 @@ void ui_Screen1_screen_init(void)
     ui_Label9 = lv_label_create(ui_Screen1);
     lv_obj_set_width(ui_Label9, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label9, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label9, -71);
-    lv_obj_set_y(ui_Label9, -3);
+    lv_obj_set_x(ui_Label9, -64);
+    lv_obj_set_y(ui_Label9, -10);
     lv_obj_set_align(ui_Label9, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label9, "温度");
     lv_obj_set_style_text_font(ui_Label9,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -295,8 +304,8 @@ void ui_Screen1_screen_init(void)
     ui_Label10 = lv_label_create(ui_Screen1);
     lv_obj_set_width(ui_Label10, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label10, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label10, 70);
-    lv_obj_set_y(ui_Label10, -3);
+    lv_obj_set_x(ui_Label10, 64);
+    lv_obj_set_y(ui_Label10, -10);
     lv_obj_set_align(ui_Label10, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label10, "湿度");
     lv_obj_set_style_text_font(ui_Label10,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -304,8 +313,8 @@ void ui_Screen1_screen_init(void)
     ui_Label11 = lv_label_create(ui_Screen1);
     lv_obj_set_width(ui_Label11, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label11, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label11, -69);
-    lv_obj_set_y(ui_Label11, 97);
+    lv_obj_set_x(ui_Label11, -64);
+    lv_obj_set_y(ui_Label11, 96);
     lv_obj_set_align(ui_Label11, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label11, "二氧化碳");
     lv_obj_set_style_text_font(ui_Label11,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -313,7 +322,7 @@ void ui_Screen1_screen_init(void)
     ui_Label12 = lv_label_create(ui_Screen1);
     lv_obj_set_width(ui_Label12, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label12, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label12, 71);
+    lv_obj_set_x(ui_Label12, 64);
     lv_obj_set_y(ui_Label12, 96);
     lv_obj_set_align(ui_Label12, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label12, "光照强度");

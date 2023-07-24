@@ -4,7 +4,6 @@
  * A simple program that subscribes to a topic.
  */
 #include "main.h"
-
 #include "FreeRTOS_POSIX.h"
 #include <unistd.h>
 #include <stdlib.h>
@@ -15,26 +14,24 @@
 #include <netdb.h>
 
 #include "utils_getopt.h"
-#include "bflb_adc.h"
 
 #include "mqtt.h"
 #include "shell.h"
 
-#include "cJSON.h"
 #include "mqtt_user.h"
+
+#include "cJSON.h"
 uint8_t sendbuf[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
 uint8_t recvbuf[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
-uint8_t message[2048];
 
 shell_sig_func_ptr abort_exec;
 static TaskHandle_t client_daemon;
 int test_sockfd;
 const char *addr;
-uint8_t carstate_send_flag;
+
 /*
     A template for opening a non-blocking POSIX socket.
 */
-int open_nb_socket(const char *addr, const char *port);
 
 int open_nb_socket(const char *addr, const char *port)
 {
@@ -119,9 +116,7 @@ int example_mqtt(int argc, const char *argv[])
     const char *password;
 
     int ret = 0;
-
-    float temp = 0.0;
-    float average_filter = 0.0;
+    // int argc = 0;
 
     abort_exec = shell_signal(1, test_close);
 
@@ -143,7 +138,7 @@ int example_mqtt(int argc, const char *argv[])
     if (argc > 3) {
         topic = argv[3];
     } else {
-        topic = SUBTOPIC;
+        topic = TOPIC;
     }
 
     /* get the user name to publish */
@@ -192,43 +187,25 @@ int example_mqtt(int argc, const char *argv[])
     xTaskCreate(client_refresher, (char *)"client_ref", 1024, &client, 10, &client_daemon);
 
     /* subscribe */
-    topic = SUBTOPIC;
     mqtt_subscribe(&client, topic, 0);
 
     /* start publishing the time */
     printf("%s listening for '%s' messages.\r\n", argv[0], topic);
     printf("Press CTRL-C to exit.\r\n");
-    char adc_str[20];
-    /* block wait CTRL-C exit */
-    connect_status=1;
-    while (1) {
-        /*
-        //准备数据
-        //temp
-        for (int i = 0; i < 50; i++) {
-            average_filter += bflb_adc_tsen_get_temp(adc);
-            vTaskDelay(10);
-        }
-        temp=average_filter/50.0;
-        average_filter = 0.0;
-        */
-        /* publisher*/
-        if (carstate_send_flag) {
-            carstate_send_flag = 0;
-            topic = PUBTOPIC;
-            memset(message, 0, sizeof(message));
-            sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"VehicleState\":{\"value\":%d},\"TargetDevice\":{\"value\":\"VEHICLE\"}},\"method\":\"thing.event.property.post\"}",
-                    carstate);
-            printf("%s\n", message);
 
-            ret = mqtt_publish(&client, topic,
-                               message, strlen(message) + 1,
-                               MQTT_PUBLISH_QOS_0);
-            if (ret != MQTT_OK) {
-                printf("ERROR! mqtt_publish() %s\r\n", mqtt_error_str(client.error));
-            }
+    /* block wait CTRL-C exit */
+    uint8_t led=0;
+    while (1) {
+        led=!led;
+        if(led)
+        {
+            bflb_gpio_set(gpio,GPIO_PIN_32);
         }
-        vTaskDelay(1000);
+        else
+        {
+            bflb_gpio_reset(gpio,GPIO_PIN_32);
+        }
+        vTaskDelay(100);
     }
 
     /* disconnect */
@@ -248,41 +225,21 @@ static void publish_callback_1(void **unused, struct mqtt_response_publish *publ
     topic_msg[published->application_message_size] = '\0';
 
     printf("Received publish('%s'): %s\r\n", topic_name, topic_msg);
-
     cJSON *json;
     json = cJSON_Parse(topic_msg);
     cJSON *subobject;
+
     if (json != NULL) {
         cJSON_ArrayForEach(subobject, json)
-        {
+        { 
             printf("Key: %s\n", subobject->string);
-            if (!strcmp(subobject->string, "EnvironmentHumidity")) {
-                humidity = subobject->valuedouble;
-                lefl_loop_array_push_back(&humi_history, subobject->valuedouble);
-            }
-            if (!strcmp(subobject->string, "EnvironmentTemperature")) {
-                temperature = subobject->valuedouble;
-                lefl_loop_array_push_back(&temp_history, subobject->valuedouble);
-            }
-            if (!strcmp(subobject->string, "CO2Content")) {
-                co2content = subobject->valuedouble;
-                lefl_loop_array_push_back(&co2_history, subobject->valuedouble);
-            }
-            if (!strcmp(subobject->string, "LightLux")) {
-                lightlux = subobject->valuedouble;
-                lefl_loop_array_push_back(&light_history, subobject->valuedouble);
-            }
-            if (!strcmp(subobject->string, "LightLux")) {
-                lightlux = subobject->valuedouble;
-                lefl_loop_array_push_back(&light_history, subobject->valuedouble);
-            }
-            if (!strcmp(subobject->string, "Timestamp")) {
-                lightlux = subobject->valuedouble;
-                strcpy(dates[humi_history.index],subobject->valuestring);
+            if (!strcmp(subobject->string, "VehicleState")) {
+                carstate = subobject->valueint;
+                printf("\n%d\n",carstate);
             }
         }
+        cJSON_Delete(json);
     }
-    cJSON_Delete(json);
     free(topic_name);
     free(topic_msg);
 }
@@ -308,7 +265,7 @@ static int check_wifi_state(void)
     }
 }
 
-int cmd_mqtt_publish(int argc, const char **argv)
+int cmd_mqtt_subscribe(int argc, const char **argv)
 {
     uint32_t ret = 0;
 
@@ -324,5 +281,5 @@ int cmd_mqtt_publish(int argc, const char **argv)
     return 0;
 }
 
-SHELL_CMD_EXPORT_ALIAS(cmd_mqtt_publish, mqtt_pub, mqtt publish);
+SHELL_CMD_EXPORT_ALIAS(cmd_mqtt_subscribe, mqtt_sub, mqtt subscribe);
 #endif

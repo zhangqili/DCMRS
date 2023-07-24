@@ -40,6 +40,7 @@ struct bflb_device_s *i2c0;
 uint8_t carstate;
 
 uint8_t tcp_rec_buf[64];
+char dates[16][32];
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -158,10 +159,10 @@ float co2content;
 float lightlux;
 float temperature;
 float humidity;
-lefl_loop_array_t temp_history={.len=30,.index=0};
-lefl_loop_array_t humi_history={.len=30,.index=0};
-lefl_loop_array_t co2_history={.len=30,.index=0};
-lefl_loop_array_t light_history={.len=30,.index=0};
+lefl_loop_array_t temp_history={.len=16,.index=0};
+lefl_loop_array_t humi_history={.len=16,.index=0};
+lefl_loop_array_t co2_history={.len=16,.index=0};
+lefl_loop_array_t light_history={.len=16,.index=0};
 static TaskHandle_t lvgl_handle;
 uint8_t connect_status;
 static void set_data(lv_timer_t * timer)
@@ -173,7 +174,7 @@ static void set_data(lv_timer_t * timer)
     }
     else
     {
-        
+        lv_label_set_text(ui_Connect_Label, "未连接");
     }
     lv_meter_set_indicator_value(tempmeter, tempindic, temperature+40);
     lv_meter_set_indicator_value(humimeter, humiindic, humidity);

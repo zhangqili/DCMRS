@@ -1,12 +1,4 @@
-#include "bflb_mtimer.h"
-#include "board.h"
-#include "lcd_conf_user.h"
-#include "lcd.h"
-#include "stdio.h"
-#include "bflb_irq.h"
-#include "bflb_uart.h"
-#include "bflb_i2c.h"
-#include "bflb_cam.h"
+#include "main.h"
 #include "image_sensor.h"
 
 #include "bl616_glb.h"
@@ -14,43 +6,40 @@
 #include "bflb_mjpeg.h"
 #include "jpeg_head.h"
 
-#include "bflb_mtimer.h"
-#include "board.h"
 #include "fatfs_diskio_register.h"
 #include "ff.h"
 
 #define DBG_TAG "MAIN"
 #include "log.h"
 
+#include "bl_fw_api.h"
+#include "wifi_mgmr_ext.h"
+#include "wifi_mgmr.h"
+
+#include <lwip/tcpip.h>
+#include <lwip/sockets.h>
+#include <lwip/netdb.h>
+
+#include "bl616_glb.h"
+#include "rfparam_adapter.h"
+
+//#include "FreeRTOS.h"
+//#include "FreeRTOSConfig.h"
+//#include "rtos_def.h"
+
 #define BLOCK_NUM           2
 #define ROW_NUM             (240 * BLOCK_NUM)
 #define CAM_FRAME_COUNT_USE 5
 #define CROP_WQVGA_X        (640)
 
-
-// #define BLOCK_NUM           2
-// #define ROW_NUM             (36 * BLOCK_NUM)
-// #define CAM_FRAME_COUNT_USE 50
-
-// static struct bflb_device_s *i2c0;
-// static struct bflb_device_s *cam0;
-
-// static struct bflb_device_s *mjpeg;
-
-// volatile uint32_t pic_count = 0;
-// volatile uint32_t pic_addr[CAM_FRAME_COUNT_USE] = { 0 };
-// volatile uint32_t pic_len[CAM_FRAME_COUNT_USE] = { 0 };
-
 static struct bflb_device_s *i2c0;
 static struct bflb_device_s *cam0;
 static struct bflb_device_s *mjpeg;
-volatile int pic_count = 0;
+struct bflb_device_s *gpio;
+int pic_count = 0;
 volatile int pic_count_sum = 0;
 volatile uint32_t pic_addr[16] = { 0 };
 volatile uint32_t pic_len[16] = { 0 };
-//static uint8_t picture[75 * 1024] ATTR_NOINIT_PSRAM_SECTION __attribute__((aligned(64)));
-//    static uint8_t picture[CROP_WQVGA_X * 160 *2] ATTR_NOINIT_PSRAM_SECTION __attribute__((aligned(64)));
-//uint8_t *pic=(uint8_t *)picture;
 
 FATFS fs;
 __attribute((aligned(8))) static uint32_t workbuf[4096];
@@ -62,6 +51,119 @@ MKFS_PARM fs_para = {
     .n_root = 1,
     .au_size = 512 * 32,
 };
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#define WIFI_STACK_SIZE  (1536)
+#define TASK_PRIORITY_FW (16)
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+static struct bflb_device_s *uart0;
+
+static TaskHandle_t wifi_fw_task;
+
+static wifi_conf_t conf = {
+    .country_code = "CN",
+};
+volatile uint32_t wifi_state = 0;
+
+uint8_t carstate = 0;
+
+extern void shell_init_with_task(struct bflb_device_s *shell);
+
+/****************************************************************************
+ * Private Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Functions
+ ****************************************************************************/
+
+int wifi_start_firmware_task(void)
+{
+    LOG_I("Starting wifi ...\r\n");
+
+    /* enable wifi clock */
+
+    GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_IP_WIFI_PHY | GLB_AHB_CLOCK_IP_WIFI_MAC_PHY | GLB_AHB_CLOCK_IP_WIFI_PLATFORM);
+    GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_WIFI);
+
+    /* set ble controller EM Size */
+
+    GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
+
+    if (0 != rfparam_init(0, NULL, 0)) {
+        LOG_I("PHY RF init failed!\r\n");
+        return 0;
+    }
+
+    LOG_I("PHY RF init success!\r\n");
+
+    /* Enable wifi irq */
+
+    extern void interrupt0_handler(void);
+    bflb_irq_attach(WIFI_IRQn, (irq_callback)interrupt0_handler, NULL);
+    bflb_irq_enable(WIFI_IRQn);
+
+    xTaskCreate(wifi_main, (char *)"fw", WIFI_STACK_SIZE, NULL, TASK_PRIORITY_FW, &wifi_fw_task);
+
+    return 0;
+}
+
+void wifi_event_handler(uint32_t code)
+{
+    switch (code) {
+        case CODE_WIFI_ON_INIT_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
+            wifi_mgmr_init(&conf);
+        } break;
+        case CODE_WIFI_ON_MGMR_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_SCAN_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_SCAN_DONE\r\n", __func__);
+            wifi_mgmr_sta_scanlist();
+        } break;
+        case CODE_WIFI_ON_CONNECTED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_CONNECTED\r\n", __func__);
+            void mm_sec_keydump();
+            mm_sec_keydump();
+        } break;
+        case CODE_WIFI_ON_GOT_IP: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
+            LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size());
+            wifi_state = 1;
+        } break;
+        case CODE_WIFI_ON_DISCONNECT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
+            wifi_state = 0;
+        } break;
+        case CODE_WIFI_ON_AP_STARTED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STARTED\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_AP_STOPPED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STOPPED\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_AP_STA_ADD: {
+            LOG_I("[APP] [EVT] [AP] [ADD] %lld\r\n", xTaskGetTickCount());
+        } break;
+        case CODE_WIFI_ON_AP_STA_DEL: {
+            LOG_I("[APP] [EVT] [AP] [DEL] %lld\r\n", xTaskGetTickCount());
+        } break;
+        default: {
+            LOG_I("[APP] [EVT] Unknown code %u \r\n", code);
+        }
+    }
+}
 
 void filesystem_init(void)
 {
@@ -102,12 +204,11 @@ void filesystem_init(void)
     }
 }
 
-char file_name[30]; // 定义一个足够大的字符数组用于存储文件名
-// 使用sprintf函数生成新的文件名
-BYTE RW_Buffer[40* 1024] = { 0 };
+char file_name[30];
+BYTE RW_Buffer[40 * 1024] = { 0 };
 #define SDU_DATA_CHECK 1
 #if SDU_DATA_CHECK
-BYTE Check_Buffer[sizeof(RW_Buffer)] = { 0 };//校验缓冲区
+BYTE Check_Buffer[sizeof(RW_Buffer)] = { 0 };
 #endif
 void fatfs_write_read_test()
 {
@@ -117,14 +218,14 @@ void fatfs_write_read_test()
 
     uint32_t time_node, i;
     //picture=pic;
-        /* full test data to buff */
-//     for (uint32_t size = 0; size < (sizeof(RW_Buffer) - sizeof(test_data)); size += sizeof(test_data)) {
-//         memcpy(&RW_Buffer[size], test_data, sizeof(test_data));
-// #if SDU_DATA_CHECK
-//         memcpy(&Check_Buffer[size], test_data, sizeof(test_data));
-// #endif
-//     }
-    
+    /* full test data to buff */
+    //     for (uint32_t size = 0; size < (sizeof(RW_Buffer) - sizeof(test_data)); size += sizeof(test_data)) {
+    //         memcpy(&RW_Buffer[size], test_data, sizeof(test_data));
+    // #if SDU_DATA_CHECK
+    //         memcpy(&Check_Buffer[size], test_data, sizeof(test_data));
+    // #endif
+    //     }
+
     sprintf(file_name, "/sd/photo_%d.jpg", pic_count_sum);
     memcpy(&RW_Buffer, (uint8_t *)pic_addr[pic_count], pic_len[pic_count]);
 
@@ -192,7 +293,7 @@ void fatfs_write_read_test()
     }
 }
 
-int length=0;
+int length = 0;
 
 void mjpeg_isr(int irq, void *arg)
 {
@@ -205,9 +306,9 @@ void mjpeg_isr(int irq, void *arg)
         jpeg_len = bflb_mjpeg_get_frame_info(mjpeg, &pic);
         pic_addr[pic_count] = (uint32_t)pic;
         pic_len[pic_count] = jpeg_len;
-        length+=jpeg_len;
+        length += jpeg_len;
         pic_count_sum++;
-        printf("pic_count %d jpeg_len%d\r\n",pic_count,jpeg_len);
+        printf("pic_count %d jpeg_len%d\r\n", pic_count, jpeg_len);
         bflb_mjpeg_pop_one_frame(mjpeg);
         // if (pic_count == CAM_FRAME_COUNT_USE) {
         bflb_cam_stop(cam0);
@@ -220,11 +321,49 @@ void mjpeg_isr(int irq, void *arg)
         bflb_mjpeg_start(mjpeg);
         printf("go on\r\n");
         pic_count++;
-        if(pic_count==16)
-        {
-            pic_count=0;
+        if (pic_count == 16) {
+            pic_count = 0;
         }
         // }
+    }
+}
+
+static void cam_task(void *pvParameters)
+{
+    uint8_t *pic;
+    uint32_t jpeg_len;
+
+    uint32_t intstatus;
+    while (1) {
+        //intstatus = bflb_mjpeg_get_intstatus(mjpeg);
+        if (bflb_mjpeg_get_frame_count(mjpeg)>0) {
+            //bflb_mjpeg_int_clear(mjpeg, MJPEG_INTCLR_ONE_FRAME);
+            jpeg_len = bflb_mjpeg_get_frame_info(mjpeg, &pic);
+            pic_addr[pic_count] = (uint32_t)pic;
+            pic_len[pic_count] = jpeg_len;
+            length += jpeg_len;
+            pic_count_sum++;
+            printf("pic_count %d jpeg_len%d\r\n", pic_count, jpeg_len);
+            bflb_mjpeg_pop_one_frame(mjpeg);
+            // if (pic_count == CAM_FRAME_COUNT_USE) {
+            bflb_cam_stop(cam0);
+            bflb_mjpeg_stop(mjpeg);
+            board_sdh_gpio_init();
+            //memcpy(&RW_Buffer[length-jpeg_len], (uint8_t *)pic_addr[pic_count-1], pic_len[pic_count-1]);
+            fatfs_write_read_test();
+            board_i2c0_gpio_init();
+            bflb_cam_start(cam0);
+            bflb_mjpeg_start(mjpeg);
+            printf("go on\r\n");
+            printf("running...\n");
+            pic_count++;
+            if (pic_count == 16) {
+                pic_count = 0;
+            }
+            // }
+        }
+        printf("running...\n");
+        vTaskDelay(100);
     }
 }
 
@@ -303,8 +442,8 @@ int main(void)
     bflb_mjpeg_fill_jpeg_header_tail(mjpeg, jpg_head_buf, jpg_head_len);
 
     bflb_mjpeg_tcint_mask(mjpeg, false);
-    bflb_irq_attach(mjpeg->irq_num, mjpeg_isr, NULL);
-    bflb_irq_enable(mjpeg->irq_num);
+    //bflb_irq_attach(mjpeg->irq_num, mjpeg_isr, NULL);
+    //bflb_irq_enable(mjpeg->irq_num);
 
     bflb_mjpeg_start(mjpeg);
 
@@ -317,7 +456,9 @@ int main(void)
     //     printf("jpg addr:%08x ,jpg size:%d\r\n", pic_addr[i], pic_len[i]);
     //     bflb_mjpeg_dump_hex((uint8_t *)pic_addr[i], pic_len[i]);
     // }
-
+    //xTaskCreate(cam_task, (char *)"cam_task", 2048, NULL, configMAX_PRIORITIES - 1, NULL);
+    //vTaskStartScheduler();
+    cam_task(NULL);
     while (1) {
         bflb_mtimer_delay_ms(1000);
     }
