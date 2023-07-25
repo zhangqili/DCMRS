@@ -1,21 +1,12 @@
-#include "bflb_mtimer.h"
-#include "board.h"
+#include "main.h"
+
 #include "lcd_conf_user.h"
 #include "lcd.h"
 #include "stdio.h"
-#include "bflb_irq.h"
-#include "bflb_uart.h"
-#include "bflb_i2c.h"
-#include "bflb_cam.h"
 #include "image_sensor.h"
 
-#include "bl616_glb.h"
-#include "bflb_dma.h"
-#include "bflb_mjpeg.h"
 #include "jpeg_head.h"
 
-#include "bflb_mtimer.h"
-#include "board.h"
 #include "fatfs_diskio_register.h"
 #include "ff.h"
 
@@ -30,7 +21,6 @@
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 
-#include "bl616_glb.h"
 #include "rfparam_adapter.h"
 
 #include "FreeRTOS.h"
@@ -38,6 +28,9 @@
 #include "rtos_def.h"
 
 #include "netdb.h"
+
+#include "car.h"
+#include "mqtt_user.h"
 //#include "tcp_server_config.h"
 
 #define BLOCK_NUM           2
@@ -70,7 +63,14 @@ static wifi_conf_t conf = {
 
 volatile uint32_t wifi_state = 0;
 
+uint8_t carstate=0;
+
 extern void shell_init_with_task(struct bflb_device_s *shell);
+
+struct bflb_device_s *pwm;
+struct bflb_device_s *gpio;
+
+
 
 /****************************************************************************
  * Private Function Prototypes
@@ -156,6 +156,8 @@ void wifi_event_handler(uint32_t code)
         }
     }
 }
+
+
 
 struct bflb_device_s *i2c0;
 struct bflb_device_s *cam0;
@@ -340,12 +342,91 @@ void mjpeg_task(void *pvParameters)
     }
 }
 
+void run(void *pvParameters)
+{
+	while(1)
+	{
+        if(!carstate)
+        {
+            printf("Standby\r\n");
+            Give_Motor_PWM(0,0);
+	        vTaskDelay(200/portTICK_RATE_MS);
+            continue;
+        }
+	    if((bflb_gpio_read(gpio, IN_1)==1)&&(bflb_gpio_read(gpio, IN_2)==0)&&(bflb_gpio_read(gpio, IN_4)==1))
+	    {
+	    	Turn_Left_little();
+            printf("Turn_Left_little\r\n");
+	    }
+	    if((bflb_gpio_read(gpio, IN_5)==1)&&(bflb_gpio_read(gpio, IN_4)==0)&&(bflb_gpio_read(gpio, IN_2)==1))
+	    {
+	    	Turn_Right_little();
+            printf("Turn_Right_little\r\n");
+	    }
+	    if(bflb_gpio_read(gpio, IN_1)==0)
+	    {
+	    	Turn_Left_more();
+            printf("Turn_Left_more\r\n");
+	    }
+	    if(bflb_gpio_read(gpio, IN_5)==0)
+	    {
+	    	Turn_Right_more();
+            printf("Turn_Right_more\r\n");
+	    }
+	    if(bflb_gpio_read(gpio, IN_3)==0)
+	    {
+	    	run_straight();
+            printf("run_straight\r\n");
+	    }
+	    vTaskDelay(200/portTICK_RATE_MS);
+	}
+}
+
+static TaskHandle_t wifi_handle;
+static void wifi_task(void *pvParameters)
+{
+    //wifi_mgmr_init(&conf);
+    vTaskDelay(1000/portTICK_RATE_MS);
+    wifi_sta_connect("test","19260817",NULL,NULL,1,0,0,1);
+    //vTaskSuspend(lvgl_handle);
+    //vTaskSuspend(data_handle);
+    while(!wifi_mgmr_sta_state_get())
+    {
+        printf("wifi connecting...\n");
+        vTaskDelay(1000/portTICK_RATE_MS);
+    }
+    
+    //vTaskResume(lvgl_handle);
+    //vTaskResume(data_handle);
+    //wifi_tcp_server_init(1000,NULL);
+    vTaskDelay(5000/portTICK_RATE_MS);
+    example_mqtt(0,NULL);
+    /*
+    struct addrinfo hints = {0};
+    struct addrinfo *servinfo;
+    int rv;
+    rv=getaddrinfo(ADDRESS, PORT, &hints, &servinfo);
+    */
+    //printf("=======================\ncode:%d",open_nb_socket(ADDRESS, PORT));
+    while (1)
+    {
+        printf("wifi running\n");
+        //TEMT6000_Read(&adc_result);
+        //sgp30_basic_read(&co2, &tvoc);
+        //vTaskDelay(100);
+        vTaskDelay(1000/portTICK_RATE_MS);
+    }
+    vTaskDelete(NULL);
+}
+
+
 int main(void)
 {
     struct bflb_cam_config_s cam_config;
     struct image_sensor_config_s *sensor_config;
 
     board_init();
+    //car_gpio_init(); 
     filesystem_init();
     board_i2c0_gpio_init();
     board_dvp_gpio_init();
@@ -398,7 +479,28 @@ int main(void)
 
     bflb_mjpeg_start(mjpeg);
 
+    //pwm = bflb_device_get_by_name("pwm_v2_0");
+
+    //struct bflb_pwm_v2_config_s cfg = {
+    //    .clk_source = BFLB_SYSTEM_PBCLK,
+    //    .clk_div = 80,
+    //    .period = 100,
+    //};
+    //设置频率10KHZ=80MKZ/80/100
+    //周期为100us
+    
+    //bflb_pwm_v2_init(pwm, &cfg);
+    //Give_Motor_PWM(10,10);
+    //xTaskCreate(data_task, (char *)"data_task", 512, NULL, configMAX_PRIORITIES - 3, &data_handle);
+
+    
+    //wifi_start_firmware_task();
+    //wifi_mgmr_init(&conf);
+    //tcpip_init(NULL, NULL);
+
     xTaskCreate(mjpeg_task, (char *)"mjpeg_task", 8192, NULL, configMAX_PRIORITIES - 2, &mjpeg_handle);
+    //xTaskCreate(wifi_task, (char *)"wifi_task", 2048, NULL, configMAX_PRIORITIES - 1, &wifi_handle);	
+    //xTaskCreate(run, (char *)"run_task", 2048, NULL, configMAX_PRIORITIES - 3, NULL);
     vTaskStartScheduler();
     while (1) {
     }
