@@ -1,12 +1,9 @@
 #include "main.h"
-
 #include "lcd_conf_user.h"
 #include "lcd.h"
 #include "stdio.h"
 #include "image_sensor.h"
-
 #include "jpeg_head.h"
-
 #include "fatfs_diskio_register.h"
 #include "ff.h"
 
@@ -498,7 +495,7 @@ int main(void)
     //wifi_mgmr_init(&conf);
     //tcpip_init(NULL, NULL);
 
-    xTaskCreate(mjpeg_task, (char *)"mjpeg_task", 8192, NULL, configMAX_PRIORITIES - 2, &mjpeg_handle);
+    xTaskCreate(mjpeg_task, (char *)"mjpeg_task", 2048, NULL, configMAX_PRIORITIES - 2, &mjpeg_handle);
     //xTaskCreate(wifi_task, (char *)"wifi_task", 2048, NULL, configMAX_PRIORITIES - 1, &wifi_handle);	
     //xTaskCreate(run, (char *)"run_task", 2048, NULL, configMAX_PRIORITIES - 3, NULL);
     vTaskStartScheduler();
