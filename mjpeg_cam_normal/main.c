@@ -1,21 +1,9 @@
-#include "bflb_mtimer.h"
-#include "board.h"
+#include "main.h"
 #include "lcd_conf_user.h"
 #include "lcd.h"
 #include "stdio.h"
-#include "bflb_irq.h"
-#include "bflb_uart.h"
-#include "bflb_i2c.h"
-#include "bflb_cam.h"
 #include "image_sensor.h"
-
-#include "bl616_glb.h"
-#include "bflb_dma.h"
-#include "bflb_mjpeg.h"
 #include "jpeg_head.h"
-
-#include "bflb_mtimer.h"
-#include "board.h"
 #include "fatfs_diskio_register.h"
 #include "ff.h"
 
@@ -30,7 +18,6 @@
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 
-#include "bl616_glb.h"
 #include "rfparam_adapter.h"
 
 #include "FreeRTOS.h"
