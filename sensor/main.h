@@ -9,6 +9,7 @@
 #include "bflb_i2c.h"
 #include "bflb_irq.h"
 #include "bflb_uart.h"
+#include "bflb_pwm_v2.h"
 #include "log.h"
 
 #define USE_WIFI 0
@@ -26,5 +27,9 @@ extern char *recv_data;
 extern struct bflb_adc_result_s adc_result;
 extern uint16_t co2;
 extern uint16_t tvoc;
+
+extern int16_t target_turn_num;
+extern int16_t curtain_i;
+void curtain_task(void *pvParameters);
 
 #endif MAIN_H_
