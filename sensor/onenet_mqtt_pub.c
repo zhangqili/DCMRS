@@ -22,6 +22,11 @@
 
 #include "dht22.h"
 #include "mqtt_user.h"
+#include "cJSON.h"
+
+#include "FreeRTOS.h"
+#include "FreeRTOSConfig.h"
+#include "rtos_def.h"
 uint8_t sendbuf[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
 uint8_t recvbuf[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
 uint8_t message[2048];
@@ -124,28 +129,6 @@ int example_mqtt(int argc, const char *argv[])
     float temp = 0.0;
     float average_filter = 0.0;
 
-    //adc temp
-    //adc = bflb_device_get_by_name("adc");
-
-    /* adc clock = XCLK / 2 / 32 */
-    /*
-    struct bflb_adc_config_s cfg;
-    cfg.clk_div = ADC_CLK_DIV_32;
-    cfg.scan_conv_mode = false;
-    cfg.continuous_conv_mode = false;
-    cfg.differential_mode = false;
-    cfg.resolution = ADC_RESOLUTION_16B;
-    cfg.vref = ADC_VREF_2P0V;
-
-    struct bflb_adc_channel_s chan;
-
-    chan.pos_chan = ADC_CHANNEL_TSEN_P;
-    chan.neg_chan = ADC_CHANNEL_GND;
-
-    bflb_adc_init(adc, &cfg);
-    bflb_adc_channel_config(adc, &chan, 1);
-    bflb_adc_tsen_init(adc, ADC_TSEN_MOD_INTERNAL_DIODE);
-    */
     abort_exec = shell_signal(1, test_close);
 
     /* get address (argv[1] if present) */
@@ -225,17 +208,6 @@ int example_mqtt(int argc, const char *argv[])
     char adc_str[20];
     /* block wait CTRL-C exit */
     while(1) {
-
-        /*
-        //准备数据
-        //temp
-        for (int i = 0; i < 50; i++) {
-            average_filter += bflb_adc_tsen_get_temp(adc);
-            vTaskDelay(10);
-        }
-        temp=average_filter/50.0;
-        average_filter = 0.0;
-        */
         TEMT6000_Read(&adc_result);
         DHT22_ReadData(&dht22_dat);
         sgp30_basic_read(&co2, &tvoc);
@@ -283,6 +255,26 @@ static void publish_callback_1(void** unused, struct mqtt_response_publish *publ
     topic_msg[published->application_message_size] = '\0';
 
     printf("Received publish('%s'): %s\r\n", topic_name, topic_msg);
+    cJSON *json;
+    json = cJSON_Parse(topic_msg);
+    cJSON *subobject;
+    if (json != NULL) {
+        cJSON_ArrayForEach(subobject, json)
+        {
+            printf("Key: %s\n", subobject->string);
+            if (!strcmp(subobject->string, "ShadeSwitch")) {
+                target_turn_num=subobject->valueint;
+                xTaskCreate(curtain_task,"curtain_task",1024,NULL,configMAX_PRIORITIES - 4,NULL);
+            }
+            if (!strcmp(subobject->string, "IrrigationSwitch")) {
+                printf("IrrigationSwitch\n");
+            }
+            if (!strcmp(subobject->string, "LightControl")) {
+                printf("LightControl\n");
+            }
+        }
+    }
+    cJSON_Delete(json);
 
     free(topic_name);
     free(topic_msg);
