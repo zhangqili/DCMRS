@@ -11,7 +11,6 @@
 #include "bflb_cam.h"
 #include "bflb_uart.h"
 #include "bl616_glb.h"
-#include "bflb_dma.h"
 #include "bflb_mjpeg.h"
 #include "bflb_pwm_v2.h"
 #include "bflb_clock.h"
@@ -27,5 +26,11 @@ extern struct bflb_device_s *pwm;
 
 extern uint8_t tcp_rec_buf[64];
 extern char *recv_data;
+
+
+void mjpeg_task(void *pvParameters);
+void mjpeg_save_one_frame(void *pvParameters);
+void mjpeg_check_and_save(void *pvParameters);
+
 
 #endif MAIN_H_

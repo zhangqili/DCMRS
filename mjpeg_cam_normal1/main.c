@@ -341,7 +341,7 @@ void mjpeg_task(void *pvParameters)
     }
 }
 
-void run(void *pvParameters)
+void car_task(void *pvParameters)
 {
 	while(1)
 	{

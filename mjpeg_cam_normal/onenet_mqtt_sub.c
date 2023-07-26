@@ -20,10 +20,16 @@
 
 #include "mqtt_user.h"
 
+
+#include "FreeRTOS.h"
+#include "FreeRTOSConfig.h"
+#include "rtos_def.h"
 #include "cJSON.h"
 uint8_t sendbuf[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
 uint8_t recvbuf[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
 
+
+extern TaskHandle_t mjpeg_handle;
 shell_sig_func_ptr abort_exec;
 static TaskHandle_t client_daemon;
 int test_sockfd;
@@ -205,6 +211,12 @@ int example_mqtt(int argc, const char *argv[])
         {
             bflb_gpio_reset(gpio,GPIO_PIN_32);
         }
+        printf("ready to save\n");
+        //vTaskSuspendAll();
+        xTaskCreate(mjpeg_save_one_frame,"save_task",2500,NULL,configMAX_PRIORITIES-1,&mjpeg_handle);
+        //xTaskResumeAll();
+        //mjpeg_check_and_save(NULL);
+        //mjpeg_save_one_frame(NULL);
         vTaskDelay(100);
     }
 

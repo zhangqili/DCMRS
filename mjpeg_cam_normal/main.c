@@ -164,7 +164,6 @@ uint32_t pic_len;
 uint32_t pic_addr;
 
 FATFS fs;
-__attribute((aligned(8))) static uint32_t workbuf[4096];
 
 MKFS_PARM fs_para = {
     .fmt = FM_FAT32,
@@ -183,24 +182,7 @@ void filesystem_init(void)
     fatfs_sdh_driver_register();
 
     ret = f_mount(&fs, "/sd", 1);
-
-    if (ret == FR_NO_FILESYSTEM) {
-        LOG_W("No filesystem yet, try to be formatted...\r\n");
-
-        ret = f_mkfs("/sd", &fs_para, workbuf, sizeof(workbuf));
-
-        if (ret != FR_OK) {
-            LOG_F("fail to make filesystem %d\r\n", ret);
-            _CALL_ERROR();
-        }
-
-        if (ret == FR_OK) {
-            LOG_I("done with formatting.\r\n");
-            LOG_I("first start to unmount.\r\n");
-            ret = f_mount(NULL, "/sd", 1);
-            LOG_I("then start to remount.\r\n");
-        }
-    } else if (ret != FR_OK) {
+    if (ret != FR_OK) {
         LOG_F("fail to mount filesystem,error= %d\r\n", ret);
         LOG_F("SD card might fail to initialise.\r\n");
         _CALL_ERROR();
@@ -315,16 +297,15 @@ void bflb_mjpeg_dump_hex(uint8_t *data, uint32_t len)
 TaskHandle_t mjpeg_handle;
 void mjpeg_task(void *pvParameters)
 {
-    uint8_t *pic;
-    uint32_t jpeg_len;
-
-    uint32_t intstatus;
-
+    while (1)
+    {
+        mjpeg_save_one_frame(NULL);
+    }
+    
+    /*
     while (1) {
         if (bflb_mjpeg_get_frame_count(mjpeg) > 0) {
-            jpeg_len = bflb_mjpeg_get_frame_info(mjpeg, &pic);
-            pic_addr = (uint32_t)pic;
-            pic_len = jpeg_len;
+            pic_len = bflb_mjpeg_get_frame_info(mjpeg, (uint8_t **)(&pic_addr));
             pic_count_sum++;
             bflb_mjpeg_pop_one_frame(mjpeg);
             bflb_cam_stop(cam0);
@@ -337,14 +318,52 @@ void mjpeg_task(void *pvParameters)
             //printf("pic_addr:(%ld,%ld)\n",pic_addr,pic_addr+jpeg_len);
             //printf("freertos_addr:(%ld,%ld)\n",configMTIME_BASE_ADDRESS,configMTIMECMP_BASE_ADDRESS);
             //vTaskDelay(2);
+            //vTaskDelete(NULL);
         }
     }
+    */
+}
+void mjpeg_save_one_frame(void *pvParameters)
+{
+    bflb_cam_start(cam0);
+    bflb_mjpeg_start(mjpeg);
+    while (1) {
+        if (bflb_mjpeg_get_frame_count(mjpeg) > 0) {
+            pic_len = bflb_mjpeg_get_frame_info(mjpeg, (uint8_t **)(&pic_addr));
+            pic_count_sum++;
+            bflb_mjpeg_pop_one_frame(mjpeg);
+            bflb_cam_stop(cam0);
+            bflb_mjpeg_stop(mjpeg);
+            board_sdh_gpio_init();
+            fatfs_write_read_test();
+            board_i2c0_gpio_init();
+            break;
+        }
+    }
+    vTaskDelete(NULL);
 }
 
-void run(void *pvParameters)
+void mjpeg_check_and_save(void *pvParameters)
+{
+        if (bflb_mjpeg_get_frame_count(mjpeg) > 0) {
+            pic_len = bflb_mjpeg_get_frame_info(mjpeg, (uint8_t **)(&pic_addr));
+            pic_count_sum++;
+            bflb_mjpeg_pop_one_frame(mjpeg);
+            bflb_cam_stop(cam0);
+            bflb_mjpeg_stop(mjpeg);
+            board_sdh_gpio_init();
+            fatfs_write_read_test();
+            printf("alive1\n");
+            board_i2c0_gpio_init();
+            printf("alive2\n");
+        }
+}
+
+void car_task(void *pvParameters)
 {
 	while(1)
 	{
+        mjpeg_save_one_frame(NULL);
         printf("running\n");
         if(!carstate)
         {
@@ -389,10 +408,12 @@ static void wifi_task(void *pvParameters)
     vTaskDelay(1000/portTICK_RATE_MS);
     wifi_sta_connect("test","19260817",NULL,NULL,1,0,0,1);
     //vTaskSuspend(lvgl_handle);
+    
     //vTaskSuspend(data_handle);
     while(!wifi_mgmr_sta_state_get())
     {
         printf("wifi connecting...\n");
+        //xTaskCreate(mjpeg_save_one_frame,"save_task",2500,NULL,configMAX_PRIORITIES - 1,&mjpeg_handle);
         vTaskDelay(1000/portTICK_RATE_MS);
     }
     
@@ -401,19 +422,9 @@ static void wifi_task(void *pvParameters)
     //wifi_tcp_server_init(1000,NULL);
     vTaskDelay(5000/portTICK_RATE_MS);
     example_mqtt(0,NULL);
-    /*
-    struct addrinfo hints = {0};
-    struct addrinfo *servinfo;
-    int rv;
-    rv=getaddrinfo(ADDRESS, PORT, &hints, &servinfo);
-    */
-    //printf("=======================\ncode:%d",open_nb_socket(ADDRESS, PORT));
     while (1)
     {
         printf("wifi running\n");
-        //TEMT6000_Read(&adc_result);
-        //sgp30_basic_read(&co2, &tvoc);
-        //vTaskDelay(100);
         vTaskDelay(1000/portTICK_RATE_MS);
     }
     vTaskDelete(NULL);
@@ -450,7 +461,7 @@ int main(void)
     cam_config.output_bufsize = cam_config.resolution_x * 2 * ROW_NUM;
 
     bflb_cam_init(cam0, &cam_config);
-    bflb_cam_start(cam0);
+    //bflb_cam_start(cam0);
 
     mjpeg = bflb_device_get_by_name("mjpeg");
 
@@ -477,7 +488,6 @@ int main(void)
     //bflb_irq_attach(mjpeg->irq_num, mjpeg_isr, NULL);
     //bflb_irq_enable(mjpeg->irq_num);
 
-    bflb_mjpeg_start(mjpeg);
 
     pwm = bflb_device_get_by_name("pwm_v2_0");
 
@@ -497,10 +507,15 @@ int main(void)
     wifi_mgmr_init(&conf);
     tcpip_init(NULL, NULL);
 
-    xTaskCreate(mjpeg_task, (char *)"mjpeg_task", 1024, NULL, configMAX_PRIORITIES - 1, &mjpeg_handle);
-    //xTaskCreate(wifi_task, (char *)"wifi_task", 2048, NULL, configMAX_PRIORITIES - 2, &wifi_handle);	
-    //xTaskCreate(run, (char *)"run_task", 1024, NULL, configMAX_PRIORITIES - 3, NULL);
+    //bflb_cam_start(cam0);
+    //bflb_mjpeg_start(mjpeg);
+    //mjpeg_save_one_frame(NULL);
+    //mjpeg_save_one_frame(NULL);
+    //xTaskCreate(mjpeg_task, (char *)"mjpeg_task", 2048, NULL, configMAX_PRIORITIES - 3, &mjpeg_handle);
+    xTaskCreate(wifi_task, (char *)"wifi_task", 3072, NULL, configMAX_PRIORITIES - 2, &wifi_handle);	
+    //xTaskCreate(car_task, (char *)"run_task", 1024, NULL, configMAX_PRIORITIES - 3, NULL);
     vTaskStartScheduler();
     while (1) {
+        //printf("whereami?");
     }
 }

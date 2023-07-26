@@ -237,7 +237,7 @@ void run_straight(void)
 {
 	Give_Motor_PWM(speed,speed);
 }
-void run(void *pvParameters)
+void car_task(void *pvParameters)
 {
 	while(1)
 	{
@@ -343,7 +343,7 @@ int main(void)
 
 
     xTaskCreate(wifi_task, (char *)"wifi_task", 2048, NULL, configMAX_PRIORITIES - 2, &wifi_handle);	
-    xTaskCreate(run, (char *)"run_task", 2048, NULL, configMAX_PRIORITIES - 3, NULL);
+    xTaskCreate(car_task, (char *)"run_task", 2048, NULL, configMAX_PRIORITIES - 3, NULL);
     vTaskStartScheduler();
 
 
