@@ -244,6 +244,10 @@ void curtain_task(void *pvParameters)
         printf("%d\n",curtain_i);
     }
     curtain_running=false;
+    bflb_gpio_reset(gpio, IN_1);
+    bflb_gpio_reset(gpio, IN_2);
+    bflb_gpio_reset(gpio, IN_3);
+    bflb_gpio_reset(gpio, IN_4);
     vTaskDelete(NULL);
 }
 

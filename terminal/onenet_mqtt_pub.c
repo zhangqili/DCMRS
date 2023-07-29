@@ -229,24 +229,24 @@ int example_mqtt(int argc, const char *argv[])
                 printf("ERROR! mqtt_publish() %s\r\n", mqtt_error_str(client.error));
                 mqtt_init(&client, test_sockfd, sendbuf, sizeof(sendbuf), recvbuf, sizeof(recvbuf), publish_callback_1);
             }
-            vTaskDelay(1000);
-            if (carstate_send_flag) {
-                carstate_send_flag = 0;
-                topic = PUBTOPIC;
-                memset(message, 0, sizeof(message));
-                sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"ShadeSwitch\":{\"value\":%d},\"FanSwitch\":{\"value\":%d},\"IrrigationSwitch\":{\"value\":%d},\"LightControl\":{\"value\":%d},\"TargetDevice\":{\"value\":\"SENSOR\"}},\"method\":\"thing.event.property.post\"}",
-                        ShadeSwitch,
-                        FanSwitch,
-                        IrrigationSwitch,
-                        LightControl);
-                printf("%s\n", message);
+        }
+        vTaskDelay(100);
+        if (sensor_send_flag) {
+            sensor_send_flag = 0;
+            topic = PUBTOPIC;
+            memset(message, 0, sizeof(message));
+            sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"ShadeSwitch\":{\"value\":%d},\"FanSwitch\":{\"value\":%d},\"IrrigationSwitch\":{\"value\":%d},\"LightControl\":{\"value\":%d},\"TargetDevice\":{\"value\":\"SENSOR\"}},\"method\":\"thing.event.property.post\"}",
+                    ShadeSwitch,
+                    FanSwitch,
+                    IrrigationSwitch,
+                    LightControl);
+            printf("%s\n", message);
 
-                ret = mqtt_publish(&client, topic,
-                                   message, strlen(message) + 1,
-                                   MQTT_PUBLISH_QOS_0);
-                if (ret != MQTT_OK) {
-                    printf("ERROR! mqtt_publish() %s\r\n", mqtt_error_str(client.error));
-                }
+            ret = mqtt_publish(&client, topic,
+                               message, strlen(message) + 1,
+                               MQTT_PUBLISH_QOS_0);
+            if (ret != MQTT_OK) {
+                printf("ERROR! mqtt_publish() %s\r\n", mqtt_error_str(client.error));
             }
         }
         vTaskDelay(100);
