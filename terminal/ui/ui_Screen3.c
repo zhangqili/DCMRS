@@ -22,11 +22,22 @@ static void carstate_event_cb(lv_event_t * e)
     lv_obj_t * cont = lv_event_get_current_target(e);
 
     carstate = lv_obj_has_state(ui_Switch1, LV_STATE_CHECKED);
+    carstate_send_flag=1;
+    /*Make the clicked buttons red*/
+}
+
+static void controlstate_event_cb(lv_event_t * e)
+{
+    /*The original target of the event. Can be the buttons or the container*/
+    lv_obj_t * target = lv_event_get_target(e);
+
+    /*The current target is always the container as the event is added to it*/
+    lv_obj_t * cont = lv_event_get_current_target(e);
+
     IrrigationSwitch = lv_obj_has_state(ui_Switch2, LV_STATE_CHECKED);
     LightControl = lv_slider_get_value(ui_Slider1);
     ShadeSwitch = lv_slider_get_value(ui_Slider2);
     FanSwitch = lv_slider_get_value(ui_Slider3);
-    carstate_send_flag=1;
     sensor_send_flag=1;
     /*Make the clicked buttons red*/
 }
@@ -42,11 +53,6 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_align(ui_Panel9, LV_ALIGN_TOP_MID);
     lv_obj_clear_flag(ui_Panel9, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    //ui_Label4 = lv_label_create(ui_Panel9);
-    //lv_obj_set_width(ui_Label4, LV_SIZE_CONTENT);   /// 1
-    //lv_obj_set_height(ui_Label4, LV_SIZE_CONTENT);    /// 1
-    //lv_obj_set_align(ui_Label4, LV_ALIGN_CENTER);
-    //lv_label_set_text(ui_Label4, "Car");
 
     ui_ImgButton1 = lv_btn_create(ui_Panel9);
     lv_obj_set_height(ui_ImgButton1, 32);
@@ -68,7 +74,7 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_style_text_font(oklabel,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_center(oklabel);
     //lv_img_set_src(ui_ImgButton1, LV_SYMBOL_BACKSPACE);
-    lv_obj_add_event_cb(ui_ImgButton2,carstate_event_cb,LV_EVENT_CLICKED,NULL);
+    lv_obj_add_event_cb(ui_ImgButton2,controlstate_event_cb,LV_EVENT_CLICKED,NULL);
 
     ui_Panel10 = lv_obj_create(ui_Screen3);
     lv_obj_set_width(ui_Panel10, lv_pct(100));
@@ -95,6 +101,7 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_width(ui_Switch1, 50);
     lv_obj_set_height(ui_Switch1, 25);
     lv_obj_set_align(ui_Switch1, LV_ALIGN_RIGHT_MID);
+    lv_obj_add_event_cb(ui_Switch1,carstate_event_cb,LV_EVENT_CLICKED,NULL);
 
     ui_Panel14 = lv_obj_create(ui_Panel10);
     lv_obj_set_height(ui_Panel14, 50);
