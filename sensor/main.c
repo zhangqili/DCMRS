@@ -256,7 +256,7 @@ static void wifi_task(void *pvParameters)
 {
     //wifi_mgmr_init(&conf);
     vTaskDelay(1000/portTICK_RATE_MS);
-    wifi_sta_connect("test","19260817",NULL,NULL,1,0,0,1);
+    wifi_sta_connect("dcmrs","19260817",NULL,NULL,1,0,0,1);
     while(!wifi_mgmr_sta_state_get())
     {
         printf("wifi connecting...\n");
