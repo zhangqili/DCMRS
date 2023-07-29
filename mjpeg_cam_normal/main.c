@@ -297,12 +297,6 @@ void bflb_mjpeg_dump_hex(uint8_t *data, uint32_t len)
 TaskHandle_t mjpeg_handle;
 void mjpeg_task(void *pvParameters)
 {
-    while (1)
-    {
-        mjpeg_save_one_frame(NULL);
-    }
-    
-    /*
     while (1) {
         if (bflb_mjpeg_get_frame_count(mjpeg) > 0) {
             pic_len = bflb_mjpeg_get_frame_info(mjpeg, (uint8_t **)(&pic_addr));
@@ -315,13 +309,8 @@ void mjpeg_task(void *pvParameters)
             board_i2c0_gpio_init();
             bflb_cam_start(cam0);
             bflb_mjpeg_start(mjpeg);
-            //printf("pic_addr:(%ld,%ld)\n",pic_addr,pic_addr+jpeg_len);
-            //printf("freertos_addr:(%ld,%ld)\n",configMTIME_BASE_ADDRESS,configMTIMECMP_BASE_ADDRESS);
-            //vTaskDelay(2);
-            //vTaskDelete(NULL);
         }
     }
-    */
 }
 void mjpeg_save_one_frame(void *pvParameters)
 {
@@ -503,19 +492,19 @@ int main(void)
     Give_Motor_PWM(10,10);
 
     
-    wifi_start_firmware_task();
-    wifi_mgmr_init(&conf);
-    tcpip_init(NULL, NULL);
+    //wifi_start_firmware_task();
+    //wifi_mgmr_init(&conf);
+    //tcpip_init(NULL, NULL);
 
-    //bflb_cam_start(cam0);
-    //bflb_mjpeg_start(mjpeg);
+    bflb_cam_start(cam0);
+    bflb_mjpeg_start(mjpeg);
     //mjpeg_save_one_frame(NULL);
     //mjpeg_save_one_frame(NULL);
     //xTaskCreate(mjpeg_task, (char *)"mjpeg_task", 2048, NULL, configMAX_PRIORITIES - 3, &mjpeg_handle);
-    xTaskCreate(wifi_task, (char *)"wifi_task", 3072, NULL, configMAX_PRIORITIES - 2, &wifi_handle);	
+    //xTaskCreate(wifi_task, (char *)"wifi_task", 3072, NULL, configMAX_PRIORITIES - 2, &wifi_handle);	
     //xTaskCreate(car_task, (char *)"run_task", 1024, NULL, configMAX_PRIORITIES - 3, NULL);
-    vTaskStartScheduler();
+    //vTaskStartScheduler();
     while (1) {
-        //printf("whereami?");
+        mjpeg_task(NULL);
     }
 }

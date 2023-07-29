@@ -34,6 +34,12 @@ extern lefl_loop_array_t co2_history;
 extern lefl_loop_array_t light_history;
 
 extern uint8_t carstate_send_flag;
+extern uint8_t sensor_send_flag;
+
+extern int16_t ShadeSwitch;
+extern int16_t FanSwitch;
+extern int16_t IrrigationSwitch;
+extern int16_t LightControl;
 
 extern uint8_t tcp_rec_buf[64];
 extern char *recv_data;

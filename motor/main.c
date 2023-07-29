@@ -24,8 +24,8 @@ struct bflb_device_s *pwm;
 //#define PWM_1 GPIO_PIN_17
 //#define PWM_2 GPIO_PIN_18
 
-int16_t turn_num = 3000;
-int16_t i = 0;
+int16_t TURN_NUM = 3000;
+int16_t curtain_i = 0;
     //pwm在0~100
 void motor_gpio_init()
 {
@@ -54,7 +54,7 @@ void water_close()
 void curtain_open()//窗帘开
 {
     while (1) {
-        if (i == turn_num) {
+        if (curtain_i == TURN_NUM) {
             break;
         }
         bflb_gpio_set(gpio, IN_1);
@@ -69,14 +69,14 @@ void curtain_open()//窗帘开
         bflb_gpio_set(gpio, IN_4);
         bflb_mtimer_delay_ms(2);
         bflb_gpio_reset(gpio, IN_4);
-        i++;
-		printf("%d\r\n",i);
+        curtain_i++;
+		printf("%d\r\n",curtain_i);
     }
 }
 void curtain_close()//窗帘关
 {
     while (1) {
-        if (i == 0) {
+        if (curtain_i == 0) {
             break;
         }
         bflb_gpio_reset(gpio, IN_4);
@@ -91,8 +91,8 @@ void curtain_close()//窗帘关
         bflb_gpio_reset(gpio, IN_1);
         bflb_mtimer_delay_ms(2);
         bflb_gpio_set(gpio, IN_1);
-        i--;
-		printf("%d\r\n",i);
+        curtain_i--;
+		printf("%d\r\n",curtain_i);
     }
 }
 void fan_open(int fan_pwm)//风扇pwm

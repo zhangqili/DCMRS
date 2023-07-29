@@ -14,11 +14,15 @@ target_sources(app PRIVATE
 target_sources(app PRIVATE ./wifi_tcp_server.c)
 target_sources(app PRIVATE ./dht22/dht22.c)
 target_sources(app PRIVATE ./onenet_mqtt_pub.c)
+target_sources(app PRIVATE 
+./cjson/cJSON.c
+./cjson/cJSON_Utils.c)
 #sdk_library_add_sources(app PRIVATE)
 
 sdk_add_include_directories(./temt6000/)
 sdk_add_include_directories(./sgp30/)
 sdk_add_include_directories(./dht22/)
+sdk_add_include_directories(./cjson/)
 sdk_add_include_directories(./)
 
 sdk_set_main_file(main.c)

@@ -21,17 +21,14 @@ static void carstate_event_cb(lv_event_t * e)
     /*The current target is always the container as the event is added to it*/
     lv_obj_t * cont = lv_event_get_current_target(e);
 
+    carstate = lv_obj_has_state(ui_Switch1, LV_STATE_CHECKED);
+    IrrigationSwitch = lv_obj_has_state(ui_Switch2, LV_STATE_CHECKED);
+    LightControl = lv_slider_get_value(ui_Slider1);
+    ShadeSwitch = lv_slider_get_value(ui_Slider2);
+    FanSwitch = lv_slider_get_value(ui_Slider3);
+    carstate_send_flag=1;
+    sensor_send_flag=1;
     /*Make the clicked buttons red*/
-    if(target==ui_Button3)
-    {
-        carstate=1;
-        carstate_send_flag=1;
-    }
-    if(target==ui_Button1)
-    {
-        carstate=0;
-        carstate_send_flag=1;
-    }
 }
 
 void ui_Screen3_screen_init(void)
@@ -62,46 +59,120 @@ void ui_Screen3_screen_init(void)
     //lv_img_set_src(ui_ImgButton1, LV_SYMBOL_BACKSPACE);
     lv_obj_add_event_cb(ui_ImgButton1,back_event_handler,LV_EVENT_CLICKED,NULL);
     
-    ui_Label6 = lv_label_create(ui_Panel9);
-    lv_obj_set_width(ui_Label6, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label6, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Label6, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label6, "车辆");
-    lv_obj_set_style_text_font(ui_Label6,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_ImgButton2 = lv_btn_create(ui_Panel9);
+    lv_obj_set_height(ui_ImgButton2, 32);
+    lv_obj_set_width(ui_ImgButton2, 72);
+    lv_obj_set_align(ui_ImgButton2, LV_ALIGN_RIGHT_MID);
+    lv_obj_t * oklabel = lv_label_create(ui_ImgButton2);
+    lv_label_set_text(oklabel, "确定");
+    lv_obj_set_style_text_font(oklabel,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_center(oklabel);
+    //lv_img_set_src(ui_ImgButton1, LV_SYMBOL_BACKSPACE);
+    lv_obj_add_event_cb(ui_ImgButton2,carstate_event_cb,LV_EVENT_CLICKED,NULL);
 
-    
-    ui_Button3 = lv_btn_create(ui_Screen3);
-    lv_obj_set_width(ui_Button3, 100);
-    lv_obj_set_height(ui_Button3, 50);
-    lv_obj_set_x(ui_Button3, 0);
-    lv_obj_set_y(ui_Button3, -30);
-    lv_obj_set_align(ui_Button3, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Button3, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_Button3, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_add_event_cb(ui_Button3,carstate_event_cb,LV_EVENT_CLICKED,NULL);
+    ui_Panel10 = lv_obj_create(ui_Screen3);
+    lv_obj_set_width(ui_Panel10, lv_pct(100));
+    lv_obj_set_height(ui_Panel10, lv_pct(85));
+    lv_obj_set_align(ui_Panel10, LV_ALIGN_BOTTOM_MID);
+    lv_obj_set_flex_flow(ui_Panel10, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(ui_Panel10, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    //lv_obj_clear_flag(ui_Panel10, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Label7 = lv_label_create(ui_Button3);
+    ui_Panel11 = lv_obj_create(ui_Panel10);
+    lv_obj_set_height(ui_Panel11, 50);
+    lv_obj_set_width(ui_Panel11, lv_pct(100));
+    lv_obj_set_align(ui_Panel11, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel11, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label4 = lv_label_create(ui_Panel11);
+    lv_obj_set_width(ui_Label4, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label4, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label4, LV_ALIGN_LEFT_MID);
+    lv_label_set_text(ui_Label4, "车辆");
+    lv_obj_set_style_text_font(ui_Label4,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Switch1 = lv_switch_create(ui_Panel11);
+    lv_obj_set_width(ui_Switch1, 50);
+    lv_obj_set_height(ui_Switch1, 25);
+    lv_obj_set_align(ui_Switch1, LV_ALIGN_RIGHT_MID);
+
+    ui_Panel14 = lv_obj_create(ui_Panel10);
+    lv_obj_set_height(ui_Panel14, 50);
+    lv_obj_set_width(ui_Panel14, lv_pct(100));
+    lv_obj_set_x(ui_Panel14, 5);
+    lv_obj_set_y(ui_Panel14, 118);
+    lv_obj_set_align(ui_Panel14, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel14, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label13 = lv_label_create(ui_Panel14);
+    lv_obj_set_width(ui_Label13, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label13, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label13, LV_ALIGN_LEFT_MID);
+    lv_label_set_text(ui_Label13, "灌溉");
+    lv_obj_set_style_text_font(ui_Label13,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Switch2 = lv_switch_create(ui_Panel14);
+    lv_obj_set_width(ui_Switch2, 50);
+    lv_obj_set_height(ui_Switch2, 25);
+    lv_obj_set_align(ui_Switch2, LV_ALIGN_RIGHT_MID);
+
+    ui_Panel12 = lv_obj_create(ui_Panel10);
+    lv_obj_set_height(ui_Panel12, 50);
+    lv_obj_set_width(ui_Panel12, lv_pct(100));
+    lv_obj_set_align(ui_Panel12, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel12, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label7 = lv_label_create(ui_Panel12);
     lv_obj_set_width(ui_Label7, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label7, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Label7, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label7, "启动");
+    lv_obj_set_align(ui_Label7, LV_ALIGN_LEFT_MID);
+    lv_label_set_text(ui_Label7, "光照");
     lv_obj_set_style_text_font(ui_Label7,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Button1 = lv_btn_create(ui_Screen3);
-    lv_obj_set_width(ui_Button1, 100);
-    lv_obj_set_height(ui_Button1, 50);
-    lv_obj_set_x(ui_Button1, 0);
-    lv_obj_set_y(ui_Button1, 30);
-    lv_obj_set_align(ui_Button1, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Button1, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_Button1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_add_event_cb(ui_Button1,carstate_event_cb,LV_EVENT_CLICKED,NULL);
+    ui_Slider1 = lv_slider_create(ui_Panel12);
+    lv_obj_set_height(ui_Slider1, 10);
+    lv_obj_set_width(ui_Slider1, lv_pct(71));
+    lv_slider_set_range(ui_Slider1, 0 , 100);
+    lv_obj_set_align(ui_Slider1, LV_ALIGN_RIGHT_MID);
 
-    ui_Label8 = lv_label_create(ui_Button1);
+    ui_Panel13 = lv_obj_create(ui_Panel10);
+    lv_obj_set_height(ui_Panel13, 50);
+    lv_obj_set_width(ui_Panel13, lv_pct(100));
+    lv_obj_set_align(ui_Panel13, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel13, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label8 = lv_label_create(ui_Panel13);
     lv_obj_set_width(ui_Label8, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label8, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Label8, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label8, "停止");
+    lv_obj_set_align(ui_Label8, LV_ALIGN_LEFT_MID);
+    lv_label_set_text(ui_Label8, "遮盖");
     lv_obj_set_style_text_font(ui_Label8,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Slider2 = lv_slider_create(ui_Panel13);
+    lv_obj_set_height(ui_Slider2, 10);
+    lv_obj_set_width(ui_Slider2, lv_pct(71));
+    lv_slider_set_range(ui_Slider2, 0 , 4600);
+    lv_obj_set_align(ui_Slider2, LV_ALIGN_RIGHT_MID);
+
+    ui_Panel15 = lv_obj_create(ui_Panel10);
+    lv_obj_set_height(ui_Panel15, 50);
+    lv_obj_set_width(ui_Panel15, lv_pct(100));
+    lv_obj_set_x(ui_Panel15, -49);
+    lv_obj_set_y(ui_Panel15, 145);
+    lv_obj_set_align(ui_Panel15, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel15, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label14 = lv_label_create(ui_Panel15);
+    lv_obj_set_width(ui_Label14, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label14, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label14, LV_ALIGN_LEFT_MID);
+    lv_label_set_text(ui_Label14, "通风");
+    lv_obj_set_style_text_font(ui_Label14,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Slider3 = lv_slider_create(ui_Panel15);
+    lv_obj_set_height(ui_Slider3, 10);
+    lv_obj_set_width(ui_Slider3, lv_pct(71));
+    lv_slider_set_range(ui_Slider3, 0 , 100);
+    lv_obj_set_align(ui_Slider3, LV_ALIGN_RIGHT_MID);
 
 }

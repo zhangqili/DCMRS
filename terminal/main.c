@@ -38,6 +38,10 @@ struct bflb_device_s *adc;
 struct bflb_device_s *i2c0;
 
 uint8_t carstate;
+int16_t ShadeSwitch;
+int16_t FanSwitch;
+int16_t IrrigationSwitch;
+int16_t LightControl;
 
 uint8_t tcp_rec_buf[64];
 char dates[16][32];

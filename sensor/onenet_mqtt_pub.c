@@ -22,6 +22,11 @@
 
 #include "dht22.h"
 #include "mqtt_user.h"
+#include "cJSON.h"
+
+#include "FreeRTOS.h"
+#include "FreeRTOSConfig.h"
+#include "rtos_def.h"
 uint8_t sendbuf[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
 uint8_t recvbuf[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
 uint8_t message[2048];
@@ -31,6 +36,8 @@ static TaskHandle_t client_daemon;
 int test_sockfd;
 const char* addr;
 extern DHT22_Data_TypeDef dht22_dat;
+extern TaskHandle_t curtain_handle;
+extern TaskHandle_t data_handle;
 
 /*
     A template for opening a non-blocking POSIX socket.
@@ -124,28 +131,6 @@ int example_mqtt(int argc, const char *argv[])
     float temp = 0.0;
     float average_filter = 0.0;
 
-    //adc temp
-    //adc = bflb_device_get_by_name("adc");
-
-    /* adc clock = XCLK / 2 / 32 */
-    /*
-    struct bflb_adc_config_s cfg;
-    cfg.clk_div = ADC_CLK_DIV_32;
-    cfg.scan_conv_mode = false;
-    cfg.continuous_conv_mode = false;
-    cfg.differential_mode = false;
-    cfg.resolution = ADC_RESOLUTION_16B;
-    cfg.vref = ADC_VREF_2P0V;
-
-    struct bflb_adc_channel_s chan;
-
-    chan.pos_chan = ADC_CHANNEL_TSEN_P;
-    chan.neg_chan = ADC_CHANNEL_GND;
-
-    bflb_adc_init(adc, &cfg);
-    bflb_adc_channel_config(adc, &chan, 1);
-    bflb_adc_tsen_init(adc, ADC_TSEN_MOD_INTERNAL_DIODE);
-    */
     abort_exec = shell_signal(1, test_close);
 
     /* get address (argv[1] if present) */
@@ -213,7 +198,7 @@ int example_mqtt(int argc, const char *argv[])
     }
 
     /* start a thread to refresh the client (handle egress and ingree client traffic) */
-    xTaskCreate(client_refresher, (char*)"client_ref", 1024,  &client, 10, &client_daemon);
+    xTaskCreate(client_refresher, (char*)"client_ref", 1024,  &client, 16 + 2, &client_daemon);
 
     /* subscribe */
     topic = SUBTOPIC;
@@ -225,23 +210,14 @@ int example_mqtt(int argc, const char *argv[])
     char adc_str[20];
     /* block wait CTRL-C exit */
     while(1) {
-
-        /*
-        //准备数据
-        //temp
-        for (int i = 0; i < 50; i++) {
-            average_filter += bflb_adc_tsen_get_temp(adc);
-            vTaskDelay(10);
-        }
-        temp=average_filter/50.0;
-        average_filter = 0.0;
-        */
         TEMT6000_Read(&adc_result);
-        DHT22_ReadData(&dht22_dat);
+        //DHT22_ReadData(&dht22_dat);
+        xTaskCreate(data_task, (char *)"data_task", 512, NULL, configMAX_PRIORITIES - 3, &data_handle);
+        //xTaskCreate(data_task,)
         sgp30_basic_read(&co2, &tvoc);
         printf("adc_result.millivolt==%d\n",adc_result.millivolt);
         //sprintf(adc_str,"%.1f",3.333*(float)(adc_result.millivolt));
-        printf("adc_result==%.1f\n",3.333*(float)(adc_result.millivolt));
+        printf("dht22==(%f,%f)\n",(dht22_dat.temp_high*256+dht22_dat.temp_low+13)/10.0,(dht22_dat.humi_high*256+dht22_dat.humi_low+2)/10.0);
         /* publisher*/
         topic = PUBTOPIC;
         memset(message, 0, sizeof(message));
@@ -261,8 +237,19 @@ int example_mqtt(int argc, const char *argv[])
         if (ret != MQTT_OK)
         {
             printf("ERROR! mqtt_publish() %s\r\n", mqtt_error_str(client.error));
+            mqtt_connect(&client, client_id, NULL, NULL, 0, username, password, connect_flags, 400);
         }
-        vTaskDelay(3000);
+        
+        board_led=!board_led;
+        if(board_led)
+        {
+            bflb_gpio_set(gpio,GPIO_PIN_32);
+        }
+        else
+        {
+            bflb_gpio_reset(gpio,GPIO_PIN_32);
+        }
+        vTaskDelay(2000);
     }
 
     /* disconnect */
@@ -283,6 +270,38 @@ static void publish_callback_1(void** unused, struct mqtt_response_publish *publ
     topic_msg[published->application_message_size] = '\0';
 
     printf("Received publish('%s'): %s\r\n", topic_name, topic_msg);
+    cJSON *json;
+    json = cJSON_Parse(topic_msg);
+    cJSON *subobject;
+    if (json != NULL) {
+        cJSON_ArrayForEach(subobject, json)
+        {
+            printf("Key: %s\n", subobject->string);
+            if (!strcmp(subobject->string, "ShadeSwitch")) {
+                target_turn_num=subobject->valueint;
+                if(!curtain_running)
+                {
+                    xTaskCreate(curtain_task,"curtain_task",1024,NULL,16 - 4,&curtain_handle);
+                }
+            }
+            if (!strcmp(subobject->string, "IrrigationSwitch")) {
+                printf("IrrigationSwitch\n");
+                if(subobject->valueint)
+                    water_open();
+                else
+                    water_close();
+            }
+            if (!strcmp(subobject->string, "LightControl")) {
+                printf("LightControl\n");
+                led_open(subobject->valueint);
+            }
+            if (!strcmp(subobject->string, "FanSwitch")) {
+                printf("FanSwitch\n");
+                fan_open(subobject->valueint);
+            }
+        }
+    }
+    cJSON_Delete(json);
 
     free(topic_name);
     free(topic_msg);

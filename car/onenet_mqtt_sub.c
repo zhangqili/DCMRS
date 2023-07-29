@@ -184,7 +184,7 @@ int example_mqtt(int argc, const char *argv[])
     }
 
     /* start a thread to refresh the client (handle egress and ingree client traffic) */
-    xTaskCreate(client_refresher, (char *)"client_ref", 1024, &client, 10, &client_daemon);
+    xTaskCreate(client_refresher, (char *)"client_ref", 1024, &client, configMAX_PRIORITIES-1, &client_daemon);
 
     /* subscribe */
     mqtt_subscribe(&client, topic, 0);

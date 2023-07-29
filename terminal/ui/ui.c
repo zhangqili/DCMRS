@@ -40,14 +40,24 @@ void ui_Screen3_screen_init(void);
 lv_obj_t * ui_Screen3;
 lv_obj_t * ui_Panel9;
 lv_obj_t * ui_ImgButton1;
-lv_obj_t * ui_Label4;
 lv_obj_t * ui_Label6;
-lv_obj_t * ui_Button3;
+lv_obj_t * ui_Panel10;
+lv_obj_t * ui_Panel11;
+lv_obj_t * ui_Label4;
+lv_obj_t * ui_Switch1;
+lv_obj_t * ui_Panel14;
+lv_obj_t * ui_Label13;
+lv_obj_t * ui_Switch2;
+lv_obj_t * ui_Panel12;
 lv_obj_t * ui_Label7;
-lv_obj_t * ui_Button1;
+lv_obj_t * ui_Slider1;
+lv_obj_t * ui_Panel13;
 lv_obj_t * ui_Label8;
+lv_obj_t * ui_Slider2;
+lv_obj_t * ui_Panel15;
+lv_obj_t * ui_Label14;
+lv_obj_t * ui_Slider3;
 lv_obj_t * ui____initial_actions0;
-
 
 lv_obj_t * temt6000meter;
 lv_meter_indicator_t * temt6000indic;

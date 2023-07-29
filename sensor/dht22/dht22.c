@@ -1,5 +1,8 @@
 #include "dht22.h"
 #include "main.h"
+#include "FreeRTOS.h"
+#include "FreeRTOSConfig.h"
+#include "rtos_def.h"
 
  //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供学习使用，未经作者许可，不得用于其它任何用途
@@ -68,16 +71,19 @@ static void DHT22_Mode_IN_NP(void)
 uint8_t DHT22_ReadByte(void)
 {
 	uint8_t i, temp = 0;
- 
+	uint32_t j, maxdelay = 0xffffffffff;
 	for (i = 0; i < 8; i++)
 	{
-		while (DHT22_IN == 0);		// 等待低电平结束
+		while (DHT22_IN == 0)
+			if(j++>maxdelay) break;		// 等待低电平结束
 		
 		bflb_mtimer_delay_us(40);					//	延时 40 微秒		低电平为 0 ，高电平为 1
 		
 		if (DHT22_IN == 1)
 		{
-			while (DHT22_IN == 1);	// 等待高电平结束
+			j=0;
+			while (DHT22_IN == 1)
+				if(j++>maxdelay) break;		// 等待高电平结束
 			
 			temp |= (uint8_t)(0X01 << (7 - i));			// 先发送高位 MSB
 		}
@@ -97,6 +103,7 @@ uint8_t DHT22_ReadData(DHT22_Data_TypeDef *DHT22_Data)
 	DHT22_Mode_OUT_PP();		// 主机输出，主机拉低
 	DHT22_OUT_0;	
 	bflb_mtimer_delay_ms(18);					// 延时 18 ms
+	//vTaskDelay(18);
 	
 	DHT22_OUT_1;						// 主机拉高，延时 30 us
 	bflb_mtimer_delay_us(30);	
