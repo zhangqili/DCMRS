@@ -182,7 +182,7 @@ static void set_data(lv_timer_t * timer)
     }
     lv_meter_set_indicator_value(tempmeter, tempindic, temperature+40);
     lv_meter_set_indicator_value(humimeter, humiindic, humidity);
-    lv_meter_set_indicator_value(sgp30meter, sgp30indic, co2content/5);
+    lv_meter_set_indicator_value(sgp30meter, sgp30indic, (co2content-400)/5);
     lv_meter_set_indicator_value(temt6000meter, temt6000indic, lightlux/100);
 }
 
