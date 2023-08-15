@@ -30,6 +30,8 @@ struct bflb_device_s *gpio;
 struct bflb_device_s *adc;
 struct bflb_device_s *i2c0;
 struct bflb_device_s *pwm;
+struct bflb_device_s *spi0;
+struct bflb_device_s *dma0_ch0;
 
 
 uint8_t tcp_rec_buf[64];
@@ -298,6 +300,7 @@ int main(void)
     bflb_pwm_v2_init(pwm, &cfg);
     TEMT6000_Init(ADC_CHANNEL_10);
     sgp30_basic_init();
+    RGB_Init();
 
     wifi_start_firmware_task();
     wifi_mgmr_init(&conf);

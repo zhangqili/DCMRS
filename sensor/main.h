@@ -11,6 +11,8 @@
 #include "bflb_uart.h"
 #include "bflb_pwm_v2.h"
 #include "bflb_clock.h"
+#include "bflb_spi.h"
+#include "bflb_dma.h"
 #include "log.h"
 
 #define USE_WIFI 0
@@ -30,6 +32,8 @@
 extern struct bflb_device_s *gpio;
 extern struct bflb_device_s *adc;
 extern struct bflb_device_s *i2c0;
+extern struct bflb_device_s *spi0;
+extern struct bflb_device_s *dma0_ch0;
 
 extern uint8_t tcp_rec_buf[64];
 extern char *recv_data;
