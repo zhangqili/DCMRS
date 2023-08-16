@@ -35,12 +35,45 @@ static void controlstate_event_cb(lv_event_t * e)
     lv_obj_t * cont = lv_event_get_current_target(e);
 
     IrrigationSwitch = lv_obj_has_state(ui_Switch2, LV_STATE_CHECKED);
-    LightControl = lv_slider_get_value(ui_Slider1);
+    //LightControl = lv_slider_get_value(ui_Slider1);
     ShadeSwitch = lv_slider_get_value(ui_Slider2);
     FanSwitch = lv_slider_get_value(ui_Slider3);
+    LEDRed = lv_slider_get_value(ui_Slider1);
+    LEDGreen = lv_slider_get_value(ui_Slider4);
+    LEDBlue = lv_slider_get_value(ui_Slider5);
     sensor_send_flag=1;
     /*Make the clicked buttons red*/
 }
+
+static void led_preset_event_cb(lv_event_t * e)
+{
+    /*The original target of the event. Can be the buttons or the container*/
+    lv_obj_t * target = lv_event_get_target(e);
+
+    /*The current target is always the container as the event is added to it*/
+    lv_obj_t * cont = lv_event_get_current_target(e);
+
+    /*Make the clicked buttons red*/
+    if(target==ui_Button1)
+    {
+        lv_slider_set_value(ui_Slider1,255,LV_ANIM_ON);
+        lv_slider_set_value(ui_Slider4,0,LV_ANIM_ON);
+        lv_slider_set_value(ui_Slider5,0,LV_ANIM_ON);
+    }
+    if(target==ui_Button3)
+    {
+        lv_slider_set_value(ui_Slider1,100,LV_ANIM_ON);
+        lv_slider_set_value(ui_Slider4,0,LV_ANIM_ON);
+        lv_slider_set_value(ui_Slider5,255,LV_ANIM_ON);
+    }
+    if(target==ui_Button4)
+    {
+        lv_slider_set_value(ui_Slider1,255,LV_ANIM_ON);
+        lv_slider_set_value(ui_Slider4,255,LV_ANIM_ON);
+        lv_slider_set_value(ui_Slider5,200,LV_ANIM_ON);
+    }
+}
+
 
 void ui_Screen3_screen_init(void)
 {
@@ -123,24 +156,122 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_height(ui_Switch2, 25);
     lv_obj_set_align(ui_Switch2, LV_ALIGN_RIGHT_MID);
 
+    ui_Panel16 = lv_obj_create(ui_Panel10);
+    lv_obj_set_height(ui_Panel16, 50);
+    lv_obj_set_width(ui_Panel16, lv_pct(100));
+    lv_obj_set_align(ui_Panel16, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel16, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label17 = lv_label_create(ui_Panel16);
+    lv_obj_set_width(ui_Label17, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label17, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label17, LV_ALIGN_LEFT_MID);
+    lv_label_set_text(ui_Label17, "预设");
+    lv_obj_set_style_text_font(ui_Label17,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Button1 = lv_btn_create(ui_Panel16);
+    lv_obj_set_height(ui_Button1, 30);
+    lv_obj_set_width(ui_Button1, lv_pct(24));
+    lv_obj_set_x(ui_Button1, -30);
+    lv_obj_set_y(ui_Button1, 0);
+    lv_obj_set_align(ui_Button1, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Button1, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_Button1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_event_cb(ui_Button1,led_preset_event_cb,LV_EVENT_CLICKED,NULL);
+
+    ui_Label18 = lv_label_create(ui_Button1);
+    lv_obj_set_width(ui_Label18, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label18, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label18, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label18, "红光");
+    lv_obj_set_style_text_font(ui_Label18,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
+    ui_Button3 = lv_btn_create(ui_Panel16);
+    lv_obj_set_height(ui_Button3, 30);
+    lv_obj_set_width(ui_Button3, lv_pct(24));
+    lv_obj_set_x(ui_Button3, 20);
+    lv_obj_set_y(ui_Button3, 0);
+    lv_obj_set_align(ui_Button3, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Button3, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_Button3, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_event_cb(ui_Button3,led_preset_event_cb,LV_EVENT_CLICKED,NULL);
+
+    ui_Label19 = lv_label_create(ui_Button3);
+    lv_obj_set_width(ui_Label19, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label19, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label19, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label19, "紫光");
+    lv_obj_set_style_text_font(ui_Label19,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
+    ui_Button4 = lv_btn_create(ui_Panel16);
+    lv_obj_set_height(ui_Button4, 30);
+    lv_obj_set_width(ui_Button4, lv_pct(24));
+    lv_obj_set_x(ui_Button4, 70);
+    lv_obj_set_y(ui_Button4, 0);
+    lv_obj_set_align(ui_Button4, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Button4, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_Button4, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_event_cb(ui_Button4,led_preset_event_cb,LV_EVENT_CLICKED,NULL);
+
+    ui_Label20 = lv_label_create(ui_Button4);
+    lv_obj_set_width(ui_Label20, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label20, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label20, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label20, "日光");
+    lv_obj_set_style_text_font(ui_Label20,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
     ui_Panel12 = lv_obj_create(ui_Panel10);
-    lv_obj_set_height(ui_Panel12, 50);
+    lv_obj_set_height(ui_Panel12, 150);
     lv_obj_set_width(ui_Panel12, lv_pct(100));
     lv_obj_set_align(ui_Panel12, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_Panel12, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
+
     ui_Label7 = lv_label_create(ui_Panel12);
     lv_obj_set_width(ui_Label7, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label7, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Label7, LV_ALIGN_LEFT_MID);
-    lv_label_set_text(ui_Label7, "光照");
+    lv_label_set_text(ui_Label7, "红");
     lv_obj_set_style_text_font(ui_Label7,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label15 = lv_label_create(ui_Panel12);
+    lv_obj_set_width(ui_Label15, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label15, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label15, LV_ALIGN_LEFT_MID);
+    lv_label_set_text(ui_Label15, "绿");
+    lv_obj_set_style_text_font(ui_Label15,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
+    ui_Slider4 = lv_slider_create(ui_Panel12);
+    lv_obj_set_height(ui_Slider4, 10);
+    lv_obj_set_width(ui_Slider4, lv_pct(60));
+    lv_obj_set_x(ui_Slider4, -20);
+    lv_slider_set_range(ui_Slider4, 0 , 255);
+    lv_obj_set_align(ui_Slider4, LV_ALIGN_RIGHT_MID);
+
+    ui_Label16 = lv_label_create(ui_Panel12);
+    lv_obj_set_width(ui_Label16, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label16, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label16, LV_ALIGN_BOTTOM_LEFT);
+    lv_label_set_text(ui_Label16, "蓝");
+    lv_obj_set_style_text_font(ui_Label16,&lv_font_Chinese_src_regular,LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
+    ui_Slider5 = lv_slider_create(ui_Panel12);
+    lv_obj_set_height(ui_Slider5, 10);
+    lv_obj_set_width(ui_Slider5, lv_pct(60));
+    lv_obj_set_x(ui_Slider5, -20);
+    lv_slider_set_range(ui_Slider5, 0 , 255);
+    lv_obj_set_align(ui_Slider5, LV_ALIGN_BOTTOM_RIGHT);
 
     ui_Slider1 = lv_slider_create(ui_Panel12);
     lv_obj_set_height(ui_Slider1, 10);
-    lv_obj_set_width(ui_Slider1, lv_pct(71));
-    lv_slider_set_range(ui_Slider1, 0 , 100);
-    lv_obj_set_align(ui_Slider1, LV_ALIGN_RIGHT_MID);
+    lv_obj_set_width(ui_Slider1, lv_pct(60));
+    lv_obj_set_x(ui_Slider1, -20);
+    lv_slider_set_range(ui_Slider1, 0 , 255);
+    lv_obj_set_align(ui_Slider1, LV_ALIGN_TOP_RIGHT);
 
     ui_Panel13 = lv_obj_create(ui_Panel10);
     lv_obj_set_height(ui_Panel13, 50);
@@ -157,7 +288,8 @@ void ui_Screen3_screen_init(void)
 
     ui_Slider2 = lv_slider_create(ui_Panel13);
     lv_obj_set_height(ui_Slider2, 10);
-    lv_obj_set_width(ui_Slider2, lv_pct(71));
+    lv_obj_set_width(ui_Slider2, lv_pct(60));
+    lv_obj_set_x(ui_Slider2, -20);
     lv_slider_set_range(ui_Slider2, 0 , 4600);
     lv_obj_set_align(ui_Slider2, LV_ALIGN_RIGHT_MID);
 
@@ -178,7 +310,8 @@ void ui_Screen3_screen_init(void)
 
     ui_Slider3 = lv_slider_create(ui_Panel15);
     lv_obj_set_height(ui_Slider3, 10);
-    lv_obj_set_width(ui_Slider3, lv_pct(71));
+    lv_obj_set_width(ui_Slider3, lv_pct(60));
+    lv_obj_set_x(ui_Slider3, -20);
     lv_slider_set_range(ui_Slider3, 0 , 100);
     lv_obj_set_align(ui_Slider3, LV_ALIGN_RIGHT_MID);
 

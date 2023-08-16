@@ -25,7 +25,7 @@
 #define IN_3 GPIO_PIN_12
 #define IN_4 GPIO_PIN_13
 #define AIN_1 GPIO_PIN_17
-#define AIN_2 GPIO_PIN_19
+//#define AIN_2 GPIO_PIN_19
 #define LED GPIO_PIN_18
 
 

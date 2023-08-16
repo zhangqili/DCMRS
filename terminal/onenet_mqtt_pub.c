@@ -235,13 +235,32 @@ int example_mqtt(int argc, const char *argv[])
             sensor_send_flag = 0;
             topic = PUBTOPIC;
             memset(message, 0, sizeof(message));
-            sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"ShadeSwitch\":{\"value\":%d},\"FanSwitch\":{\"value\":%d},\"IrrigationSwitch\":{\"value\":%d},\"LightControl\":{\"value\":%d},\"TargetDevice\":{\"value\":\"SENSOR\"}},\"method\":\"thing.event.property.post\"}",
+            sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"ShadeSwitch\":{\"value\":%d},\"FanSwitch\":{\"value\":%d},\"IrrigationSwitch\":{\"value\":%d},\"TargetDevice\":{\"value\":\"SENSOR\"},\"LEDRed\":{\"value\":%d},\"LEDGreen\":{\"value\":%d},\"LEDBlue\":{\"value\":%d}},\"method\":\"thing.event.property.post\"}",
                     ShadeSwitch,
                     FanSwitch,
                     IrrigationSwitch,
-                    LightControl);
+                    LEDRed,
+                    LEDGreen,
+                    LEDBlue);
             printf("%s\n", message);
 
+            ret = mqtt_publish(&client, topic,
+                               message, strlen(message) + 1,
+                               MQTT_PUBLISH_QOS_0);
+            if (ret != MQTT_OK) {
+                printf("ERROR! mqtt_publish() %s\r\n", mqtt_error_str(client.error));
+            }
+            vTaskDelay(1000);
+            topic = PUBTOPIC;
+            memset(message, 0, sizeof(message));
+            sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"ShadeSwitch\":{\"value\":%d},\"FanSwitch\":{\"value\":%d},\"IrrigationSwitch\":{\"value\":%d},\"TargetDevice\":{\"value\":\"SENSOR\"},\"LEDRed\":{\"value\":%d},\"LEDGreen\":{\"value\":%d},\"LEDBlue\":{\"value\":%d}},\"method\":\"thing.event.property.post\"}",
+                    ShadeSwitch,
+                    FanSwitch,
+                    IrrigationSwitch,
+                    LEDRed,
+                    LEDGreen,
+                    LEDBlue);
+            printf("%s\n", message);
             ret = mqtt_publish(&client, topic,
                                message, strlen(message) + 1,
                                MQTT_PUBLISH_QOS_0);
@@ -288,10 +307,6 @@ static void publish_callback_1(void **unused, struct mqtt_response_publish *publ
             if (!strcmp(subobject->string, "CO2Content")) {
                 co2content = subobject->valuedouble;
                 lefl_loop_array_push_back(&co2_history, subobject->valuedouble);
-            }
-            if (!strcmp(subobject->string, "LightLux")) {
-                lightlux = subobject->valuedouble;
-                lefl_loop_array_push_back(&light_history, subobject->valuedouble);
             }
             if (!strcmp(subobject->string, "LightLux")) {
                 lightlux = subobject->valuedouble;

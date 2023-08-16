@@ -40,6 +40,9 @@ extern int16_t ShadeSwitch;
 extern int16_t FanSwitch;
 extern int16_t IrrigationSwitch;
 extern int16_t LightControl;
+extern int16_t LEDRed;
+extern int16_t LEDGreen;
+extern int16_t LEDBlue;
 
 extern uint8_t tcp_rec_buf[64];
 extern char *recv_data;

@@ -42,6 +42,9 @@ int16_t ShadeSwitch;
 int16_t FanSwitch;
 int16_t IrrigationSwitch;
 int16_t LightControl;
+int16_t LEDRed;
+int16_t LEDGreen;
+int16_t LEDBlue;
 
 uint8_t tcp_rec_buf[64];
 char dates[16][32];

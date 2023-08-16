@@ -22,6 +22,7 @@ target_sources(app PRIVATE
 target_sources(app PRIVATE ./wifi_tcp_server.c)
 target_sources(app PRIVATE ./dht22/dht22.c)
 target_sources(app PRIVATE ./onenet_mqtt_pub.c)
+target_sources(app PRIVATE ./RGB/rgb.c)
 target_sources(app PRIVATE 
 ./cjson/cJSON.c
 ./cjson/cJSON_Utils.c)
@@ -32,6 +33,7 @@ sdk_add_include_directories(./sgp30/)
 sdk_add_include_directories(./dht22/)
 sdk_add_include_directories(./cjson/)
 sdk_add_include_directories(./u8g2/)
+sdk_add_include_directories(./RGB/)
 sdk_add_include_directories(./Display/)
 sdk_add_include_directories(./fezui/)
 sdk_add_include_directories(./lefl/)

@@ -9,11 +9,16 @@
 #define RGB_H_
 #include "main.h"
 
-#define LED_NUM                 (60)
+#define LED_NUM                 (96)
 #define ONE_PULSE               (0xFF00)
 #define ZERO_PULSE              (0xF000)
 #define NONE_PULSE              (0)
 #define RGB_BUFFER_LENGTH       (400+3*8*(LED_NUM+1))
+
+
+extern uint8_t red;
+extern uint8_t green;
+extern uint8_t blue;
 
 //#define RGB_Start() HAL_TIMEx_PWMN_Start_DMA(&htim8,TIM_CHANNEL_3,RGB_buffer,RGB_BUFFER_LENGTH);
 

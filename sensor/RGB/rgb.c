@@ -8,11 +8,10 @@
 
 ATTR_NOCACHE_NOINIT_RAM_SECTION uint16_t RGB_Buffer[RGB_BUFFER_LENGTH];
 
-void dma0_ch0_isr(void *arg)
-{
-    dma_tc_flag0++;
-    printf("tc done\r\n");
-}
+uint8_t red=0;
+uint8_t green=0;
+uint8_t blue=0;
+
 
 void sram_init()
 {
@@ -20,9 +19,6 @@ void sram_init()
 
     for (i = 0; i < 400; i++) {
         RGB_Buffer[i] = 0x0000;
-    }
-    for (i = 400; i < RGB_BUFFER_LENGTH; i++) {
-        RGB_Buffer[i] = ZERO_PULSE;
     }
 }
 
@@ -106,8 +102,6 @@ void RGB_Init()
 
     bflb_dma_channel_init(dma0_ch0, &tx_config);
 
-    bflb_dma_channel_irq_attach(dma0_ch0, dma0_ch0_isr, NULL);
-
     tx_transfers[0].src_addr = (uint32_t)RGB_Buffer;
     tx_transfers[0].dst_addr = (uint32_t)DMA_ADDR_SPI0_TDR;
     tx_transfers[0].nbytes = RGB_BUFFER_LENGTH*2;
@@ -116,5 +110,5 @@ void RGB_Init()
     int used_count = bflb_dma_channel_lli_reload(dma0_ch0, tx_llipool, 1, tx_transfers, 1);
     bflb_dma_channel_lli_link_head(dma0_ch0, tx_llipool, used_count);
     bflb_dma_channel_start(dma0_ch0);
-    RGB_TurnOff();
+    //RGB_TurnOff();
 }
