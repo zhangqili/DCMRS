@@ -55,6 +55,7 @@ void fan_open(int fan_pwm);
 void led_open(int led_pwm);
 
 extern bool curtain_running;
+extern uint8_t connect_status;
 
 #define water_open() bflb_gpio_set(gpio, WATER)
 

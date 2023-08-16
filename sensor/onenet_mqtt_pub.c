@@ -209,6 +209,7 @@ int example_mqtt(int argc, const char *argv[])
     printf("%s listening for '%s' messages.\r\n", argv[0], topic);
     printf("Press CTRL-C to exit.\r\n");
     char adc_str[20];
+    connect_status=1;
     /* block wait CTRL-C exit */
     while (1) {
         TEMT6000_Read(&adc_result);

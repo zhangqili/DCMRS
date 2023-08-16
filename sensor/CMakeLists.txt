@@ -19,6 +19,7 @@ target_sources(app PRIVATE
 ./sgp30/driver_sgp30_advance.c 
 ./sgp30/driver_sgp30_basic.c 
 ./sgp30/driver_sgp30_interface.c) 
+target_sources(app PRIVATE ./Display/display.c)
 target_sources(app PRIVATE ./wifi_tcp_server.c)
 target_sources(app PRIVATE ./dht22/dht22.c)
 target_sources(app PRIVATE ./onenet_mqtt_pub.c)

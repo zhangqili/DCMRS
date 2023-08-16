@@ -47,9 +47,6 @@
  */
 uint8_t sgp30_interface_iic_init(void)
 {
-    board_i2c0_gpio_init();
-    i2c0 = bflb_device_get_by_name("i2c0");
-    bflb_i2c_init(i2c0, 100000);
     return 0;
 }
 

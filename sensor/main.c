@@ -27,6 +27,8 @@
 //#include "tcp_server_config.h"
 #include "mqtt_user.h"
 
+#include "fezui.h"
+#include "fezui_var.h"
 struct bflb_device_s *gpio;
 struct bflb_device_s *adc;
 struct bflb_device_s *i2c0;
@@ -64,6 +66,7 @@ DHT22_Data_TypeDef dht22_dat;
 
 volatile uint32_t wifi_state = 0;
 bool curtain_running = false;
+uint8_t connect_status;
 
 /****************************************************************************
  * Private Function Prototypes
@@ -262,13 +265,36 @@ static void wifi_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
+static TaskHandle_t oled_handle;
+static void oled_task(void *pvParameters)
+{
+    while (1) {
+        vTaskSuspendAll();
+        lefl_key_update(&key_up,bflb_gpio_read(gpio, GPIO_PIN_30));
+        lefl_key_update(&key_down,bflb_gpio_read(gpio, GPIO_PIN_31));
+        lefl_link_frame_logic(&mainframe);
+        lefl_cursor_move(&cursor, &target_cursor);
+        u8g2_ClearBuffer(&(fezui.u8g2));
+        lefl_link_frame_draw(&mainframe);
+        u8g2_SendBuffer(&(fezui.u8g2));
+        xTaskResumeAll();
+        vTaskDelay(5);
+    }
+}
+
 int main(void)
 {
     board_init();
     gpio = bflb_device_get_by_name("gpio");
     adc = bflb_device_get_by_name("adc");
+    board_i2c0_gpio_init();
+    i2c0 = bflb_device_get_by_name("i2c0");
+    bflb_i2c_init(i2c0, 1000000);
+
     motor_gpio_init();
     bflb_gpio_init(gpio, GPIO_PIN_32, GPIO_OUTPUT | GPIO_PULL_NONE | GPIO_SMT_EN | GPIO_DRV_0);
+    bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    bflb_gpio_init(gpio, GPIO_PIN_31, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
     bflb_gpio_reset(gpio, IN_1);
     bflb_gpio_reset(gpio, IN_2);
     bflb_gpio_reset(gpio, IN_3);
@@ -280,7 +306,7 @@ int main(void)
         .clk_source = BFLB_SYSTEM_PBCLK,
         .clk_div = 80,
         .period = 100,
-    };  //设置频率10KHZ=80MKZ/80/100
+    }; //设置频率10KHZ=80MKZ/80/100
         //周期为100us
 
     bflb_pwm_v2_init(pwm, &cfg);
@@ -294,7 +320,7 @@ int main(void)
         }
         bflb_mtimer_delay_ms(10);
     }
-
+    fezui_init(&fezui);
     wifi_start_firmware_task();
     wifi_mgmr_init(&conf);
     wifi_mgmr_sta_autoconnect_enable();
@@ -304,6 +330,7 @@ int main(void)
 #endif
     //xTaskCreate(data_task, (char *)"data_task", 512, NULL, configMAX_PRIORITIES - 3, &data_handle);
     xTaskCreate(wifi_task, (char *)"wifi_task", 3072, NULL, 16 + 1, &wifi_handle);
+    xTaskCreate(oled_task, (char *)"oled_task", 2048, NULL, 16 - 5, &oled_handle);
     vTaskStartScheduler();
 
     while (1) {
