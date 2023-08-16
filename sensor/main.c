@@ -289,7 +289,7 @@ int main(void)
     adc = bflb_device_get_by_name("adc");
     board_i2c0_gpio_init();
     i2c0 = bflb_device_get_by_name("i2c0");
-    bflb_i2c_init(i2c0, 1000000);
+    bflb_i2c_init(i2c0, 400000);
 
     motor_gpio_init();
     bflb_gpio_init(gpio, GPIO_PIN_32, GPIO_OUTPUT | GPIO_PULL_NONE | GPIO_SMT_EN | GPIO_DRV_0);
