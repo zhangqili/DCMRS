@@ -52,10 +52,7 @@ void fezui_init()
     lefl_bit_array_init(lines+2, lines3_data, sizeof(lines3_data)*8);
     lefl_bit_array_init(lines+3, lines4_data, sizeof(lines4_data)*8);
 
-    menupage_init();
-    settingspage_init();
-    calibrationpage_init();
-    keyconfigpage_init();
+    homepage_init();
 
     lefl_link_frame_navigate(&mainframe, &homepage);
 }

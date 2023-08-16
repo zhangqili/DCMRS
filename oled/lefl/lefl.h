@@ -158,7 +158,7 @@ extern "C" {
     lefl_animation_float_t lefl_animation_tick(lefl_animation_base_t *a);
     lefl_animation_float_t lefl_animation_normalize(lefl_animation_base_t *a);
 
-#define LEFL_ANIMATION_SPEED       (1/15.0)
+#define LEFL_ANIMATION_SPEED       (1/8.0)
     void lefl_easing_pid(float* f, float target);
     lefl_animation_float_t lefl_animation_sine_ease(lefl_animation_float_t f, ...);
     lefl_animation_float_t lefl_animation_pow_ease(lefl_animation_float_t f, ...);

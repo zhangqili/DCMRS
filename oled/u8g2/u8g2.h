@@ -195,7 +195,7 @@
 #define U8G2_USE_LARGE_FONTS
 #endif 
 #endif
-
+#define U8G2_USE_LARGE_FONTS
 /*==========================================*/
 /* C++ compatible */
 

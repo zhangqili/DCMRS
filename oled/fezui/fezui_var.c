@@ -11,7 +11,7 @@ char comstr[8] = {0};
 
 fezui_t fezui =
 {
-    .invert=1
+    .invert=0
 };
 
 uint8_t key_buffer[KEY_NUM] = {0};

@@ -7,6 +7,7 @@
 struct bflb_device_s *i2c0;
 
 u8g2_t u8g2;
+int32_t count=0;
 
 int main(void)
 {
@@ -47,5 +48,11 @@ int main(void)
 #endif
         u8g2_SendBuffer(&(fezui.u8g2));
         fezui_fps++;
+        count++;
+        if(count>=50)
+        {
+            count=0;
+            lefl_menu_index_increase(&mainmenu,1);
+        }
     }
 }

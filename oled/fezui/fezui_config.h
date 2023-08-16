@@ -34,60 +34,17 @@ void fezui_save_counts();
 
 extern lefl_link_frame_t mainframe;
 
+
 extern lefl_page_t homepage;
+extern lefl_menu_t mainmenu;
 void homepage_logic(lefl_page_t *page);
 void homepage_draw(lefl_page_t *page);
 void homepage_load(lefl_page_t *page);
-
-extern lefl_page_t menupage;
-void menupage_init();
-void menupage_logic(lefl_page_t *page);
-void menupage_draw(lefl_page_t *page);
-void menupage_load(lefl_page_t *page);
-void main_menu_cb(lefl_menu_t *menu);
-
-extern lefl_page_t settingspage;
-void settingspage_init();
-void settingspage_logic(lefl_page_t *page);
-void settingspage_draw(lefl_page_t *page);
-void settingspage_load(lefl_page_t *page);
-void settings_menu_cb(lefl_menu_t *menu);
-
-extern lefl_page_t oscilloscopepage;
-void oscilloscopepage_logic(lefl_page_t *page);
-void oscilloscopepage_draw(lefl_page_t *page);
-void oscilloscopepage_load(lefl_page_t *page);
-
-extern lefl_page_t keyselectpage;
-void keyselectpage_logic(lefl_page_t *page);
-void keyselectpage_draw(lefl_page_t *page);
-void keyselectpage_load(lefl_page_t *page);
-
-extern lefl_page_t keyconfigpage;
-void keyconfigpage_init();
-void keyconfigpage_logic(lefl_page_t *page);
-void keyconfigpage_draw(lefl_page_t *page);
-
+void homepage_init();
 
 extern lefl_page_t debugpage;
 void debugpage_logic(lefl_page_t *page);
 void debugpage_draw(lefl_page_t *page);
 void debugpage_load(lefl_page_t *page);
-
-extern lefl_page_t calibrationpage;
-void calibrationpage_init();
-void calibrationpage_logic(lefl_page_t *page);
-void calibrationpage_draw(lefl_page_t *page);
-void calibrationpage_load(lefl_page_t *page);
-
-extern lefl_page_t statisticpage;
-void statisticpage_logic(lefl_page_t *page);
-void statisticpage_draw(lefl_page_t *page);
-void statisticpage_load(lefl_page_t *page);
-
-extern lefl_page_t aboutpage;
-void aboutpage_logic(lefl_page_t *page);
-void aboutpage_draw(lefl_page_t *page);
-void aboutpage_load(lefl_page_t *page);
 
 #endif /* FEZUI_CONFIG_H_ */
