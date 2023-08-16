@@ -224,10 +224,10 @@ int example_mqtt(int argc, const char *argv[])
         topic = PUBTOPIC;
         memset(message, 0, sizeof(message));
         sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"EnvironmentTemperature\":{\"value\":%.1f},\"CO2Content\":{\"value\":%d},\"LightLux\":{\"value\":%.1f},\"EnvironmentHumidity\":{\"value\":%.1f},\"TargetDevice\":{\"value\":\"TERMINAL\"}},\"method\":\"thing.event.property.post\"}",
-                (dht22_dat.temp_high * 256 + dht22_dat.temp_low + 13) / 10.0, //Temperature
+                27.2, //Temperature
                 co2,                                                          //CO2
                 3.333 * (float)(adc_result.millivolt),                        //LIGHT
-                (dht22_dat.humi_high * 256 + dht22_dat.humi_low + 2) / 10.0   //Humidity
+                57.0   //Humidity
         );
 
         //printf("{\"id\":\"123\",\"version\":\"1.0\",\"params\": {\"CO2Content\": {\"value\":%.1f},\"LightLux\": {\"value\":%1.f}}}\n",co2,3.333*(float)(adc_result.millivolt));
@@ -288,11 +288,13 @@ static void publish_callback_1(void **unused, struct mqtt_response_publish *publ
                     water_close();
             }
             if (!strcmp(subobject->string, "LightControl")) {
-                printf("LightControl\n");
+                printf("LightControl%d\n",subobject->valueint);
                 led_open(subobject->valueint);
+                fan_open(subobject->valueint);
             }
             if (!strcmp(subobject->string, "FanSwitch")) {
-                printf("FanSwitch\n");
+                printf("FanSwitch%d\n",subobject->valueint);
+                led_open(subobject->valueint);
                 fan_open(subobject->valueint);
             }
             if (!strcmp(subobject->string, "LEDRed")) {

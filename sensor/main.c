@@ -254,6 +254,7 @@ static void wifi_task(void *pvParameters)
     while (!wifi_mgmr_sta_state_get()) {
         printf("wifi connecting...\n");
         vTaskDelay(1000 / portTICK_RATE_MS);
+        TEMT6000_Read(&adc_result);
     }
 
     vTaskDelay(5000 / portTICK_RATE_MS);
@@ -261,6 +262,7 @@ static void wifi_task(void *pvParameters)
     while (1) {
         printf("wifi running\n");
         vTaskDelay(1000 / portTICK_RATE_MS);
+        TEMT6000_Read(&adc_result);
     }
     vTaskDelete(NULL);
 }
@@ -290,7 +292,7 @@ int main(void)
     board_i2c0_gpio_init();
     i2c0 = bflb_device_get_by_name("i2c0");
     bflb_i2c_init(i2c0, 400000);
-
+    co2=400;
     motor_gpio_init();
     bflb_gpio_init(gpio, GPIO_PIN_32, GPIO_OUTPUT | GPIO_PULL_NONE | GPIO_SMT_EN | GPIO_DRV_0);
     bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
@@ -318,7 +320,13 @@ int main(void)
         for (int i = 0; i < j; i++) {
             RGB_Set(100, 100, 100, i);
         }
-        bflb_mtimer_delay_ms(10);
+        bflb_mtimer_delay_ms(7);
+    }
+    for (int j = 0; j < LED_NUM; j++) {
+        for (int i = 0; i < j; i++) {
+            RGB_Set(0, 0, 0, i);
+        }
+        bflb_mtimer_delay_ms(7);
     }
     fezui_init(&fezui);
     wifi_start_firmware_task();

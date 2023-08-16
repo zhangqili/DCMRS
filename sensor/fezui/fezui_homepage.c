@@ -54,7 +54,7 @@ void homepage_logic(lefl_page_t *page)
     {
     case 0:
         fezui_rolling_number_set(&main_num,(u8g2_long_t)27.2);
-        fezui_rolling_number_set(&sub_num,((u8g2_long_t)27.2*10)%10);
+        fezui_rolling_number_set(&sub_num,2);
         break;
     case 1:
         fezui_rolling_number_set(&main_num,(u8g2_long_t)57.0);
@@ -102,6 +102,7 @@ void homepage_load(lefl_page_t *page)
 void homepage_init()
 {
     key_up.key_cb=lambda(void,(lefl_key_t*k){lefl_menu_index_increase(&mainmenu,1);});
-    key_down.key_cb=lambda(void,(lefl_key_t*k){lefl_menu_index_increase(&mainmenu,-1);});
+    key_down.key_cb=lambda(void,(lefl_key_t*k){lefl_menu_index_increase(&mainmenu,1);});
     lefl_menu_init(&mainmenu, mainmenu_items, sizeof(mainmenu_items)/sizeof(const char*), NULL);
+    mainmenu.selected_index=2;
 }
