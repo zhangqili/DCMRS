@@ -235,7 +235,7 @@ int example_mqtt(int argc, const char *argv[])
             sensor_send_flag = 0;
             topic = PUBTOPIC;
             memset(message, 0, sizeof(message));
-            sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"ShadeSwitch\":{\"value\":%d},\"FanSwitch\":{\"value\":%d},\"IrrigationSwitch\":{\"value\":%d},\"TargetDevice\":{\"value\":\"SENSOR\"},\"LEDRed\":{\"value\":%d},\"LEDGreen\":{\"value\":%d},\"LEDBlue\":{\"value\":%d}},\"method\":\"thing.event.property.post\"}",
+            sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"ShadeSwitch\":{\"value\":%d},\"LightControl\":{\"value\":%d},\"IrrigationSwitch\":{\"value\":%d},\"TargetDevice\":{\"value\":\"SENSOR\"},\"LEDRed\":{\"value\":%d},\"LEDGreen\":{\"value\":%d},\"LEDBlue\":{\"value\":%d}},\"method\":\"thing.event.property.post\"}",
                     ShadeSwitch,
                     FanSwitch,
                     IrrigationSwitch,
@@ -253,7 +253,7 @@ int example_mqtt(int argc, const char *argv[])
             vTaskDelay(1000);
             topic = PUBTOPIC;
             memset(message, 0, sizeof(message));
-            sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"ShadeSwitch\":{\"value\":%d},\"FanSwitch\":{\"value\":%d},\"IrrigationSwitch\":{\"value\":%d},\"TargetDevice\":{\"value\":\"SENSOR\"},\"LEDRed\":{\"value\":%d},\"LEDGreen\":{\"value\":%d},\"LEDBlue\":{\"value\":%d}},\"method\":\"thing.event.property.post\"}",
+            sprintf(message, "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"ShadeSwitch\":{\"value\":%d},\"LightControl\":{\"value\":%d},\"IrrigationSwitch\":{\"value\":%d},\"TargetDevice\":{\"value\":\"SENSOR\"},\"LEDRed\":{\"value\":%d},\"LEDGreen\":{\"value\":%d},\"LEDBlue\":{\"value\":%d}},\"method\":\"thing.event.property.post\"}",
                     ShadeSwitch,
                     FanSwitch,
                     IrrigationSwitch,
